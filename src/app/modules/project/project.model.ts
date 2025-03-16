@@ -11,7 +11,7 @@ const ProjectSchema = new Schema<TProject>(
     githubLink: { type: String, required: true },
     imageUrls: { type: [String], required: true },
   },
-  { timestamps: true } 
+  { timestamps: true },
 );
 
 export const Project = model<TProject>('Project', ProjectSchema);

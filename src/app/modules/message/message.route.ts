@@ -6,21 +6,21 @@ import validationRequest from '../../middlewares/validateRequest';
 import { MessageValidation } from './message.validation';
 import { MessageController } from './message.controller';
 
-
-
-
-
 const router = express.Router();
 
-router.post('/',
-    // auth(USER_ROLES.user),
+router.post(
+  '/',
+  // auth(USER_ROLES.user),
 
-validationRequest(MessageValidation.MessageSchema), MessageController.createMessageController);
+  validationRequest(MessageValidation.MessageSchema),
+  MessageController.createMessageController,
+);
 
-
-router.delete('/:id',
-    // auth(USER_ROLES.user),
-    MessageController.deleteOwnMessageController);
+router.delete(
+  '/:id',
+  // auth(USER_ROLES.user),
+  MessageController.deleteOwnMessageController,
+);
 
 router.get('/', MessageController.getAllMessageController);
 

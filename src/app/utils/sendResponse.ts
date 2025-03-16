@@ -1,15 +1,11 @@
 import { Response } from 'express';
 
-
-
 type TMeta = {
   page: number;
   limit: number;
   total: number;
   totalPage: number;
-}
-
-
+};
 
 //ekhane request thik moto kaj howar por database theke paowa response ta asbe
 

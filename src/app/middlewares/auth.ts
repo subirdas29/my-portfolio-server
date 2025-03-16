@@ -18,7 +18,7 @@
 //     }
 
 //     let decoded
-  
+
 //     try{
 //        decoded = verifyToken(token, config.jwt_access_secret as string);
 //     }

@@ -12,14 +12,13 @@ const moduleRoutes = [
     route: BlogRoutes,
   },
   {
-    path:'/projects',
-    route:ProjectRoutes
+    path: '/projects',
+    route: ProjectRoutes,
   },
   {
-    path:'/messages',
-    route:MessageRoutes
+    path: '/messages',
+    route: MessageRoutes,
   },
-  
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

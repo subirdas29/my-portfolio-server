@@ -6,22 +6,28 @@ import validationRequest from '../../middlewares/validateRequest';
 import { BlogValidation } from './blog.validation';
 // import { BlogValidation } from './blog.validation';
 
-
-
 const router = express.Router();
 
-router.post('/',
-    // auth(USER_ROLES.user),
+router.post(
+  '/',
+  // auth(USER_ROLES.user),
 
-validationRequest(BlogValidation.blogSchema), BlogController.createBlogController);
+  validationRequest(BlogValidation.blogSchema),
+  BlogController.createBlogController,
+);
 
-router.patch('/edit-blog/:id',
-    // auth(USER_ROLES.user),
-    validationRequest(BlogValidation.updateBlogSchema),BlogController.updateOwnBlogController);
+router.patch(
+  '/edit-blog/:id',
+  // auth(USER_ROLES.user),
+  validationRequest(BlogValidation.updateBlogSchema),
+  BlogController.updateOwnBlogController,
+);
 
-router.delete('/:id',
-    // auth(USER_ROLES.user),
-    BlogController.deleteOwnBlogController);
+router.delete(
+  '/:id',
+  // auth(USER_ROLES.user),
+  BlogController.deleteOwnBlogController,
+);
 
 router.get('/', BlogController.getAllBlogController);
 

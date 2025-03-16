@@ -11,14 +11,14 @@ const blogSchema = new Schema<TBlog>(
       type: String,
       required: true,
     },
-    category:{
-        type:String,
-        required:true
+    category: {
+      type: String,
+      required: true,
     },
-    imageUrls:{
-        type:[String],
-        required:true
-    }
+    imageUrls: {
+      type: [String],
+      required: true,
+    },
   },
   {
     timestamps: true,
