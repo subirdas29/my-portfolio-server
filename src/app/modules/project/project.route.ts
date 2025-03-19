@@ -15,6 +15,8 @@ router.post(
   validationRequest(ProjectValidation.projectSchema),
   ProjectController.createProjectController,
 );
+router.get('/', ProjectController.getAllProjectController);
+router.get('/project/:projectId', ProjectController.getSingleProjectController);
 
 router.patch(
   '/edit-project/:id',
@@ -29,6 +31,6 @@ router.delete(
   ProjectController.deleteOwnProjectController,
 );
 
-router.get('/', ProjectController.getAllProjectController);
+
 
 export const ProjectRoutes = router;

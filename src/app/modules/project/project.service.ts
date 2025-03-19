@@ -1,31 +1,53 @@
 // import { User } from '../User/user.model';
 
+import httpStatus from 'http-status';
 import QueryBuilder from '../../builder/QueryBuilder';
+import AppError from '../../errors/AppError';
 import { TProject } from './project.interface';
 import { Project } from './project.model';
 
-const createProject = async (
-  payload: TProject,
-  // token:JwtPayload
-) => {
-  //   const {email} = token
-  //   const authorData = await User.isUserExist(email)
+const createProject = async (payload: TProject) => {
+  const technologiesArray = Array.isArray(payload.technologies)
+    ? payload.technologies 
+    : payload.technologies?.split(",").map((tech:string) => tech.trim()) || []; 
 
-  //   if(!authorData){
-  //     throw new AppError(httpStatus.NOT_FOUND,"The user is not found")
-  //   }
+  const projectData: TProject = {
+    ...payload,
+    technologies: technologiesArray,
+  };
 
-  //   const authorBlog:Partial<TBlog> = {...payload}
-  //   authorBlog.author = authorData._id
-
-  const result = await Project.create(payload);
-
+  const result = await Project.create(projectData);
   return result;
 };
 
+
+const getAllProject = async (query: Record<string, unknown>) => {
+  const projectQuery = new QueryBuilder(Project.find(), query);
+
+  const result = await projectQuery.modelQuery;
+    const meta = await projectQuery.countTotal();
+    
+    return {
+        result,
+        meta
+    }
+  }
+
+  const getSingleProject = async (projectId: string) => {
+    const result = await Project.findById(projectId)
+  
+    if (!result) {
+       throw new AppError(httpStatus.NOT_FOUND, 'Project not found');
+    }
+    return result
+   
+  };
+  
+  
+
 const updateOwnProjectByUser = async (
   id: string,
-  payload: TProject,
+  payload: Partial<TProject>,
   // token:JwtPayload
 ) => {
   //   const {email} = token
@@ -62,16 +84,12 @@ const deleteOwnProjectByUser = async (
   return result;
 };
 
-const getAllProject = async (query: Record<string, unknown>) => {
-  const projectQuery = new QueryBuilder(Project.find(), query);
 
-  const result = await projectQuery.modelQuery;
-  return result;
-};
 
 export const ProjectServices = {
   createProject,
   updateOwnProjectByUser,
   deleteOwnProjectByUser,
   getAllProject,
+  getSingleProject
 };

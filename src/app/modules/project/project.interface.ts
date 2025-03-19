@@ -1,10 +1,11 @@
 export type TProject = {
   title: string;
-  projectType: string;
+  projectType: "Full-Stack" | "Front-End";
   details: string;
-  technologies: string;
+  technologies: string | string[]; 
   liveLink: string;
-  githubLink: string;
+  clientGithubLink: string;
+  serverGithubLink?: string;
   imageUrls: string[];
   createAt: Date;
   updatedAt: Date;

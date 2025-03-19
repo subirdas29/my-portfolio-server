@@ -11,6 +11,14 @@ const MessageSchema = new Schema<TMessage>(
       type: String,
       required: true,
     },
+    phone: {
+      type: String,
+      required: true,
+    },
+    subject: {
+      type: String,
+      required: true,
+    },
     message: {
       type: String,
       required: true,

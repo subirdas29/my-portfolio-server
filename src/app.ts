@@ -18,7 +18,7 @@ app.use(
 );
 
 // application routes
-app.use('/api/v1', router);
+app.use('/api', router);
 
 const test = async (req: Request, res: Response) => {
   // Promise.reject()
