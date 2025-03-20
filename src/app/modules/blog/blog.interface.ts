@@ -1,8 +1,7 @@
 export type TBlog = {
   title: string;
-  content: string;
   category: string;
-  imageUrls: string[];
+  content: string;
   createAt: Date;
   updatedAt: Date;
 };

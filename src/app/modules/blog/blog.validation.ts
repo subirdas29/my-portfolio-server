@@ -6,6 +6,9 @@ const blogSchema = z.object({
     title: z.string({
       required_error: 'Title is required',
     }),
+    category: z.string({
+      required_error: 'Category is required',
+    }),
 
     content: z.string({
       required_error: 'Content is required',
