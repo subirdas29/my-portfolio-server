@@ -29,7 +29,7 @@ const getSingleProjectController = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Projectfetched successfully',
+    message: 'Project fetched successfully',
     data: result
   });
 });

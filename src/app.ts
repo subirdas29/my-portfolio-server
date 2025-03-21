@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: 'http://localhost:5173', // Frontend origin
+    origin: 'https://subirdas-portfolio.vercel.app', // Frontend origin
     credentials: true, // Allow cookies and credentials
   }),
 );

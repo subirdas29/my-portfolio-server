@@ -30,5 +30,6 @@ router.delete(
 );
 
 router.get('/', BlogController.getAllBlogController);
+router.get('/blog/:blogId', BlogController.getSingleBlog);
 
 export const BlogRoutes = router;

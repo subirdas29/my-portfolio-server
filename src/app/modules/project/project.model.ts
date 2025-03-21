@@ -7,6 +7,11 @@ const ProjectSchema = new Schema<TProject>(
     title: { type: String, required: true },
     projectType: { type: String, enum: projectType, default: "Full-Stack" },
     details: { type: String, required: true },
+    keyFeatures: { 
+      type: [String], 
+      required: true, 
+      default: []  
+    },
     technologies: { 
       type: [String], 
       required: true, 

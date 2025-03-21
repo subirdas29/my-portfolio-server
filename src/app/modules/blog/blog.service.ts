@@ -3,6 +3,8 @@ import { Blog } from './blog.model';
 // import { User } from '../User/user.model';
 
 import QueryBuilder from '../../builder/QueryBuilder';
+import AppError from '../../errors/AppError';
+import httpStatus from 'http-status';
 
 const createBlog = async (
   payload: TBlog,
@@ -22,6 +24,17 @@ const createBlog = async (
 
   return result;
 };
+
+  const getSingleBlog = async (blogId: string) => {
+    const result = await Blog.findById(blogId)
+  
+    if (!result) {
+       throw new AppError(httpStatus.NOT_FOUND, 'Blog not found');
+    }
+    return result
+   
+  };
+  
 
 const updateOwnBlogByUser = async (
   id: string,
@@ -74,4 +87,5 @@ export const BlogServices = {
   updateOwnBlogByUser,
   deleteOwnBlogByUser,
   getAllBlog,
+  getSingleBlog
 };

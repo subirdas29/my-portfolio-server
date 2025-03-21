@@ -7,6 +7,11 @@ const projectSchema = z.object({
     projectType: z.string().min(3, "Project type must be at least 3 characters long"),
     details: z.string().min(10, "Details must be at least 10 characters long"),
 
+    keyFeatures: z
+  .union([
+    z.string().min(2, "KeyFeatures must be specified"), 
+    z.array(z.string().min(1))
+  ]),
     technologies: z.union([
       z.string().min(2, "Technologies must be specified"), 
       z.array(z.string().min(1)).nonempty("At least one technology is required"),
@@ -34,6 +39,12 @@ const updateProjectSchema = z.object({
   projectType: z.string().min(3, "Project type must be at least 3 characters long").optional(),
   details: z.string().min(10, "Details must be at least 10 characters long").optional(),
 
+  keyFeatures: z
+  .union([
+    z.string().min(2, "KeyFeatures must be specified"), // Allow string input
+    z.array(z.string().min(1)).optional(), // Allow array input
+  ])
+  .optional(),
   technologies: z
     .union([
       z.string().min(2, "Technologies must be specified"), // Allow string input

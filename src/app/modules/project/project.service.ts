@@ -7,14 +7,23 @@ import { TProject } from './project.interface';
 import { Project } from './project.model';
 
 const createProject = async (payload: TProject) => {
+
+  const keyFeaturesArray = Array.isArray(payload.keyFeatures)
+  ? payload.keyFeatures 
+  : payload.keyFeatures?.split(",").map((key:string) => key.trim()) || []; 
+
+  
   const technologiesArray = Array.isArray(payload.technologies)
     ? payload.technologies 
     : payload.technologies?.split(",").map((tech:string) => tech.trim()) || []; 
 
   const projectData: TProject = {
     ...payload,
+    keyFeatures: keyFeaturesArray,
     technologies: technologiesArray,
   };
+  
+
 
   const result = await Project.create(projectData);
   return result;

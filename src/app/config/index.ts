@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import { Resend } from 'resend';
 
 dotenv.config({ path: path.join((process.cwd(), '.env')) });
 
@@ -13,4 +14,5 @@ export default {
   jwt_access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN,
   jwt_refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
   admin_password: process.env.ADMIN_PASSWORD,
+  resend: new Resend(process.env.RESEND_API_KEY),
 };
