@@ -3,7 +3,7 @@
 This is the backend API for the personal developer portfolio. It handles authentication, project/blog/skill management, and connects with the client-side portfolio and admin dashboard.
 
 🌐 **Frontend Client:** [Portfolio Website](https://subirdas-portfolio.vercel.app/)  
-🌐 **Backend Server:** [Portfolio Server](https://my-portfolio-server-five-delta.vercel.app/)  
+📁 **Backend Server:** [Portfolio Server](https://my-portfolio-server-five-delta.vercel.app/)  
 🔧 **Admin Dashboard:** [Visit Dashboard](https://my-portfolio-dashboard-six.vercel.app/)- Connected app to manage content (projects, blogs, skills)
 
 ---
