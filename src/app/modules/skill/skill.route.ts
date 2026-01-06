@@ -15,6 +15,10 @@ router.post(
 );
 
 router.get('/', SkillController.getAllSkill);
+router.patch(
+  '/reorder',
+  SkillController.updateSkillOrderController
+);
 
 router.delete(
   '/:id',

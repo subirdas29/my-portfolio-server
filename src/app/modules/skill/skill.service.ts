@@ -11,17 +11,41 @@ const createSkill = async (payload: TSkill) => {
 };
 
 
+
 const getAllSkill = async (query: Record<string, unknown>) => {
-  const projectQuery = new QueryBuilder(Skill.find(), query);
+
+  const projectQuery = new QueryBuilder(Skill.find().sort('order'), query); 
 
   const result = await projectQuery.modelQuery;
-    const meta = await projectQuery.countTotal();
+  const meta = await projectQuery.countTotal();
     
-    return {
-        result,
-        meta
+  return { result, meta }
+};
+
+
+const updateSkillOrder = async (payload: { id: string; order: number }[]) => {
+  const session = await Skill.startSession();
+  session.startTransaction();
+
+  try {
+    for (const item of payload) {
+      await Skill.findByIdAndUpdate(
+        item.id,
+        { order: item.order },
+        { session }
+      );
     }
+
+    await session.commitTransaction();
+    session.endSession();
+    return { success: true, message: "Order updated successfully" };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
   }
+};
+
 
   const getdeleteSkill = async (
     id: string,
@@ -46,6 +70,7 @@ const getAllSkill = async (query: Record<string, unknown>) => {
 export const SkillServices = {
     createSkill,
     getAllSkill,
+    updateSkillOrder,
     getdeleteSkill
   };
   

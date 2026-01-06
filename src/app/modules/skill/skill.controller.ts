@@ -24,7 +24,17 @@ const createSkillController = catchAsync(async (req, res) => {
       data: result.result,
     });
   });
+const updateSkillOrderController = catchAsync(async (req, res) => {
 
+  const result = await SkillServices.updateSkillOrder(req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Skill order updated successfully',
+    data: result,
+  });
+});
  
   const deleteOwnSkillController = catchAsync(async (req, res) => {
     const { id } = req.params;
@@ -43,5 +53,6 @@ const createSkillController = catchAsync(async (req, res) => {
   export const SkillController = {
     createSkillController,
     getAllSkill,
+    updateSkillOrderController,
     deleteOwnSkillController
   };
