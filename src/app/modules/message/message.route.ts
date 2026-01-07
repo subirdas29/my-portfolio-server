@@ -16,6 +16,8 @@ router.post(
   MessageController.createMessageController,
 );
 
+router.patch('/:id/status', MessageController.updateMessageStatusController);
+
 router.delete(
   '/:id',
   // auth(USER_ROLES.user),

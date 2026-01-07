@@ -1,27 +1,28 @@
-import { TBlog } from './blog.interface';
-import { Blog } from './blog.model';
+
 // import { User } from '../User/user.model';
 
 import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import httpStatus from 'http-status';
+import { IBlog } from './blog.interface';
+import { Blog } from './blog.model';
+import { generateSlug } from './blog.utils';
 
-const createBlog = async (
-  payload: TBlog,
-  // token:JwtPayload
-) => {
-  //   const {email} = token
-  //   const authorData = await User.isUserExist(email)
+const createBlog = async (payload: IBlog) => {
+  
+  const baseSlug = generateSlug(payload.title);
 
-  //   if(!authorData){
-  //     throw new AppError(httpStatus.NOT_FOUND,"The user is not found")
-  //   }
 
-  //   const authorBlog:Partial<TBlog> = {...payload}
-  //   authorBlog.author = authorData._id
+  const existingBlog = await Blog.findOne({ slug: baseSlug });
+
+  if (existingBlog) {
+ 
+    payload.slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
+  } else {
+    payload.slug = baseSlug;
+  }
 
   const result = await Blog.create(payload);
-
   return result;
 };
 
@@ -38,7 +39,7 @@ const createBlog = async (
 
 const updateOwnBlogByUser = async (
   id: string,
-  payload: TBlog,
+  payload: IBlog,
   // token:JwtPayload
 ) => {
   //   const {email} = token

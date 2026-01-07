@@ -23,6 +23,11 @@ const MessageSchema = new Schema<TMessage>(
       type: String,
       required: true,
     },
+    status: {
+    type: String,
+    enum: ["Pending", "Replied", "No Response", "Dealing", "Booked", "Closed"],
+    default: "Pending" 
+  }
   },
   {
     timestamps: true,

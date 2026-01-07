@@ -6,6 +6,8 @@ import { MessageRoutes } from '../modules/message/message.route';
 import { SkillRoutes } from '../modules/skill/skill.route';
 import { AuthRoutes } from '../modules/auth/auth.route';
 
+import { fileUploadRoutes } from '../modules/fileUpload/fileUpload.route';
+
 const router = Router();
 
 const moduleRoutes = [
@@ -28,6 +30,10 @@ const moduleRoutes = [
   {
     path: '/messages',
     route: MessageRoutes,
+  },
+  {
+    path: '/upload',
+    route: fileUploadRoutes,
   },
 ];
 

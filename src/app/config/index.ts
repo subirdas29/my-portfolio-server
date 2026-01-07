@@ -15,4 +15,6 @@ export default {
   jwt_refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
   admin_password: process.env.ADMIN_PASSWORD,
   resend: new Resend(process.env.RESEND_API_KEY),
+  redis_url: process.env.REDIS_URL,
+  redis_cache_time: parseInt(process.env.REDIS_CACHE_TIME || '3600'),
 };

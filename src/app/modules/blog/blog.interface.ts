@@ -1,7 +1,24 @@
-export type TBlog = {
+import { Types } from 'mongoose';
+
+export interface IBlog {
   title: string;
-  category: string;
+  slug: string;
   content: string;
-  createAt: Date;
-  updatedAt: Date;
-};
+  summary?: string;
+  featuredImage?: string;
+  tags?: string[];
+  categories?: string[];
+  status: 'draft' | 'published';
+  publishedAt?: Date;
+  meta: {
+    views: number;
+    likes: number;
+  };
+  metadata: {
+    title: string;
+    description: string;
+  };
+  likedBy: Types.ObjectId[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}

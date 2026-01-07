@@ -42,16 +42,83 @@ const deleteOwnMessageByUser = async (
   return result;
 };
 
-const getAllMessage = async (query: Record<string, unknown>) => {
-  const MessageQuery = new QueryBuilder(Message.find(), query);
+const updateMessageStatus = async (id: string, status: string) => {
+  const result = await Message.findByIdAndUpdate(
+    id,
+    { status }, 
+    {
+      new: true, 
+      runValidators: true,
+    },
+  );
 
-  const result = await MessageQuery.modelQuery;
+  if (!result) {
+    throw new Error('Message not found');
+  }
+
   return result;
+};
+
+const getAllMessage = async (query: Record<string, unknown>) => {
+  // ১. ক্যালেন্ডার ডেট ফিল্টার ফিক্স (Specific Date)
+  if (query?.createdAt && typeof query.createdAt === 'string') {
+    const date = new Date(query.createdAt);
+    
+    const startOfDay = new Date(date);
+    startOfDay.setUTCHours(0, 0, 0, 0); // ওই দিনের একদম শুরু
+
+    const endOfDay = new Date(date);
+    endOfDay.setUTCHours(23, 59, 59, 999); // ওই দিনের একদম শেষ
+
+    query.createdAt = {
+      $gte: startOfDay,
+      $lte: endOfDay
+    };
+  }
+
+  // ২. টাইমলাইন রেঞ্জ ফিল্টার ফিক্স (Range)
+  if (query?.range) {
+    const days = query.range === 'today' ? 0 : Number(query.range);
+    const startDate = new Date();
+    
+    if (days === 0) {
+      startDate.setUTCHours(0, 0, 0, 0); // আজকের শুরু থেকে
+    } else {
+      startDate.setDate(startDate.getDate() - days);
+      startDate.setUTCHours(0, 0, 0, 0);
+    }
+    
+    query.createdAt = { $gte: startDate };
+    delete query.range;
+  }
+
+  // ৩. QueryBuilder কল করা
+  const messageQuery = new QueryBuilder(Message.find(), query)
+    .search(['name', 'email', 'message'])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await messageQuery.modelQuery;
+  const meta = await messageQuery.countTotal();
+
+  const totalBooked = await Message.countDocuments({ status: 'Booked' });
+  const totalGhosted = await Message.countDocuments({ status: 'No Response' });
+
+  return {
+    result,
+    meta: {
+      ...meta,
+      totalBooked,
+      totalGhosted
+    },
+  };
 };
 
 export const MessageServices = {
   createMessage,
-
+updateMessageStatus,
   deleteOwnMessageByUser,
   getAllMessage,
 };

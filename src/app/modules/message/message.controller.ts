@@ -25,6 +25,22 @@ const deleteOwnMessageController = catchAsync(async (req, res) => {
   });
 });
 
+const updateMessageStatusController = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body; 
+
+  const result = await MessageServices.updateMessageStatus(id, status);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Message status updated successfully',
+    data: result,
+  });
+});
+
+
+
 const getAllMessageController = catchAsync(async (req, res) => {
   const result = await MessageServices.getAllMessage(req.query);
   sendResponse(res, {
@@ -37,7 +53,7 @@ const getAllMessageController = catchAsync(async (req, res) => {
 
 export const MessageController = {
   createMessageController,
-
+updateMessageStatusController,
   deleteOwnMessageController,
   getAllMessageController,
 };

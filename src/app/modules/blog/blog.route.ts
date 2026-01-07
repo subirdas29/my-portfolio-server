@@ -4,6 +4,7 @@ import { BlogController } from './blog.controller';
 // import { USER_ROLES } from '../User/user.constant';
 import validationRequest from '../../middlewares/validateRequest';
 import { BlogValidation } from './blog.validation';
+import cache from '../../middlewares/cache';
 // import { BlogValidation } from './blog.validation';
 
 const router = express.Router();
@@ -29,7 +30,7 @@ router.delete(
   BlogController.deleteOwnBlogController,
 );
 
-router.get('/', BlogController.getAllBlogController);
-router.get('/blog/:blogId', BlogController.getSingleBlog);
+router.get('/', cache, BlogController.getAllBlogController);
+router.get('/blog/:blogId', cache, BlogController.getSingleBlog);
 
 export const BlogRoutes = router;
