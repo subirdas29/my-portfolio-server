@@ -12,6 +12,7 @@ const ProjectSchema = new Schema<TProject>(
       required: true, 
       default: []  
     },
+    order: { type: Number, default: 0 },
     technologies: { 
       type: [String], 
       required: true, 

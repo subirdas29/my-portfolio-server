@@ -31,7 +31,11 @@ const createProject = async (payload: TProject) => {
 
 
 const getAllProject = async (query: Record<string, unknown>) => {
-  const projectQuery = new QueryBuilder(Project.find(), query);
+  const projectQuery = new QueryBuilder(Project.find(), query).search(['title', 'details']) 
+    .filter()
+    .sort('order')
+    .paginate()  
+    .fields();
 
   const result = await projectQuery.modelQuery;
     const meta = await projectQuery.countTotal();
@@ -52,9 +56,33 @@ const getAllProject = async (query: Record<string, unknown>) => {
    
   };
   
+
+  const updateProjectOrder = async (payload: { id: string; order: number }[]) => {
+    const session = await Project.startSession();
+    session.startTransaction();
+  
+    try {
+      for (const item of payload) {
+        await Project.findByIdAndUpdate(
+          item.id,
+          { order: item.order },
+          { session }
+        );
+      }
+  
+      await session.commitTransaction();
+      session.endSession();
+      return { success: true, message: "Order updated successfully" };
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
+  };
+  
   
 
-const updateOwnProjectByUser = async (
+const updateProject = async (
   id: string,
   payload: Partial<TProject>,
   // token:JwtPayload
@@ -74,7 +102,7 @@ const updateOwnProjectByUser = async (
   return result;
 };
 
-const deleteOwnProjectByUser = async (
+const deleteProject = async (
   id: string,
   // token:JwtPayload
 ) => {
@@ -97,8 +125,9 @@ const deleteOwnProjectByUser = async (
 
 export const ProjectServices = {
   createProject,
-  updateOwnProjectByUser,
-  deleteOwnProjectByUser,
+  updateProject,
+  deleteProject,
   getAllProject,
-  getSingleProject
+  getSingleProject,
+  updateProjectOrder
 };

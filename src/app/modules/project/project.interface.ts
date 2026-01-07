@@ -5,6 +5,7 @@ export type TProject = {
   keyFeatures: string | string[]; 
   technologies: string | string[]; 
   liveLink: string;
+  order: number;
   clientGithubLink: string;
   serverGithubLink?: string;
   imageUrls: string[];

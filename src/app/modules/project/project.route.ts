@@ -25,6 +25,12 @@ router.patch(
   ProjectController.updateOwnProjectController,
 );
 
+router.patch(
+  '/reorder',
+  ProjectController.updateProjectOrderController
+);
+
+
 router.delete(
   '/:id',
   // auth(USER_ROLES.user),

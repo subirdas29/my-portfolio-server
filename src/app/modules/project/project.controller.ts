@@ -35,11 +35,22 @@ const getSingleProjectController = catchAsync(async (req, res) => {
 });
 
 
+const updateProjectOrderController = catchAsync(async (req, res) => {
+
+  const result = await ProjectServices.updateProjectOrder(req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Project order updated successfully',
+    data: result,
+  });
+});
 
 const updateOwnProjectController = catchAsync(async (req, res) => {
   const { id } = req.params;
 
-  const result = await ProjectServices.updateOwnProjectByUser(id, req.body);
+  const result = await ProjectServices.updateProject(id, req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -51,7 +62,7 @@ const updateOwnProjectController = catchAsync(async (req, res) => {
 const deleteOwnProjectController = catchAsync(async (req, res) => {
   const { id } = req.params;
 
-  await ProjectServices.deleteOwnProjectByUser(id);
+  await ProjectServices.deleteProject(id);
 
   res.status(httpStatus.OK).json({
     success: true,
@@ -67,5 +78,6 @@ export const ProjectController = {
   updateOwnProjectController,
   deleteOwnProjectController,
   getAllProjectController,
-  getSingleProjectController
+  getSingleProjectController,
+  updateProjectOrderController
 };
