@@ -1,22 +1,32 @@
-import nodemailer from 'nodemailer';
-import config from '../config';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Resend } from 'resend';
+import dotenv from 'dotenv';
 
-export const sendEmail = async (to: string, html: string) => {
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: config.NODE_ENV === 'production', // true for port 465, false for other ports
-    auth: {
-      user: 'subirdas1045@gmail.com',
-      pass: 'xdyv oeeb runl krje',
-    },
-  });
+dotenv.config();
 
-  await transporter.sendMail({
-    from: 'subirdas1045@gmail.com', // sender address
-    to, // list of receivers
-    subject: 'Reset your password within 10min ✔', // Subject line
-    text: '', // plain text body
-    html, // html body
-  });
+const resend = new Resend(process.env.RESEND_API_KEY as string);
+
+
+interface TEmailOptions {
+  subject: string;
+  html: string;
+}
+
+
+const sendEmail = async ({ subject, html }: TEmailOptions): Promise<[any, any]> => {
+  try {
+    const data = await resend.emails.send({
+      from: 'Subir Portfolio <onboarding@resend.dev>', 
+      to: [process.env.MY_PERSONAL_EMAIL as string], 
+      subject: subject,
+      html: html,
+    });
+    console.log('Resend Response:', data);
+    return [data, null];
+  } catch (error) {
+    console.error('Resend Error:', error);
+    return [null, error];
+  }
 };
+
+export default sendEmail;

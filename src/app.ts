@@ -47,18 +47,18 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use(compression());
 
-// ফাইল আপলোডের সময় বডি বড় হতে পারে, তাই JSON limit ১০ কেবি থেকে বাড়ানো উচিত
+
 app.use(express.json({ limit: '5mb' })); 
 app.use(cookieParser());
 
-// সমস্যা এখানে: localhost:3001 এবং localhost:3000 লিস্টে ছিল না
+
 app.use(
   cors({
     origin: [
       'https://subirdas-portfolio.vercel.app', 
       'http://localhost:5173',
       'http://localhost:3000', 
-      'http://localhost:3001'  // আপনার ড্যাশবোর্ড যদি ৩০০০ বা ৩০০১ এ চলে
+      'http://localhost:3001' 
     ],
     credentials: true,
   }),

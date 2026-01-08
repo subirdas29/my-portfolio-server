@@ -1,28 +1,46 @@
 // import { User } from '../User/user.model';
 
 import QueryBuilder from '../../builder/QueryBuilder';
+import emailQueue from '../../queues/emailQueue';
+
 import { TMessage } from './message.interface';
 import { Message } from './message.model';
 
-const createMessage = async (
-  payload: TMessage,
-  // token:JwtPayload
-) => {
-  //   const {email} = token
-  //   const authorData = await User.isUserExist(email)
-
-  //   if(!authorData){
-  //     throw new AppError(httpStatus.NOT_FOUND,"The user is not found")
-  //   }
-
-  //   const authorBlog:Partial<TBlog> = {...payload}
-  //   authorBlog.author = authorData._id
-
+const createMessage = async (payload: TMessage) => {
   const result = await Message.create(payload);
+
+  const htmlContent = `
+    <div style="font-family: sans-serif; max-width: 600px; border: 1px solid #eee; padding: 20px; border-radius: 15px;">
+      <h2 style="color: #f59e0b;">🚀 New Inquiry from Portfolio!</h2>
+      <p><strong>Name:</strong> ${payload.name}</p>
+      <p><strong>Email:</strong> ${payload.email}</p>
+      <p><strong>Phone:</strong> ${payload.phone}</p>
+      <p><strong>Subject:</strong> ${payload.subject}</p>
+      <div style="background: #f9fafb; padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 4px solid #f59e0b;">
+        <strong>Message:</strong><br/> ${payload.message}
+      </div>
+    </div>
+  `;
+
+  try {
+
+    await emailQueue.add(
+      {
+        subject: `New Message: ${payload.subject}`,
+        html: htmlContent,
+      },
+      {
+        attempts: 3, 
+        backoff: 5000, 
+        removeOnComplete: true, 
+      }
+    );
+  } catch (err) {
+    console.error('Queue Error:', err);
+  }
 
   return result;
 };
-
 const deleteOwnMessageByUser = async (
   id: string,
   // token:JwtPayload
@@ -60,15 +78,15 @@ const updateMessageStatus = async (id: string, status: string) => {
 };
 
 const getAllMessage = async (query: Record<string, unknown>) => {
-  // ১. ক্যালেন্ডার ডেট ফিল্টার ফিক্স (Specific Date)
+ 
   if (query?.createdAt && typeof query.createdAt === 'string') {
     const date = new Date(query.createdAt);
     
     const startOfDay = new Date(date);
-    startOfDay.setUTCHours(0, 0, 0, 0); // ওই দিনের একদম শুরু
+    startOfDay.setUTCHours(0, 0, 0, 0); 
 
     const endOfDay = new Date(date);
-    endOfDay.setUTCHours(23, 59, 59, 999); // ওই দিনের একদম শেষ
+    endOfDay.setUTCHours(23, 59, 59, 999);
 
     query.createdAt = {
       $gte: startOfDay,
@@ -76,13 +94,13 @@ const getAllMessage = async (query: Record<string, unknown>) => {
     };
   }
 
-  // ২. টাইমলাইন রেঞ্জ ফিল্টার ফিক্স (Range)
+
   if (query?.range) {
     const days = query.range === 'today' ? 0 : Number(query.range);
     const startDate = new Date();
     
     if (days === 0) {
-      startDate.setUTCHours(0, 0, 0, 0); // আজকের শুরু থেকে
+      startDate.setUTCHours(0, 0, 0, 0); 
     } else {
       startDate.setDate(startDate.getDate() - days);
       startDate.setUTCHours(0, 0, 0, 0);
