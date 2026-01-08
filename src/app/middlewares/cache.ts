@@ -1,42 +1,56 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextFunction, Request, Response } from "express";
 import redisClient from "../utils/redis";
 
-interface CustomResponse extends Response {
-  sendResponse?: (body: any) => Response;
-}
 
-const cache = async (req: Request, res: CustomResponse, next: NextFunction) => {
+const cache = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+
   if (!redisClient.isOpen) {
-    console.error('Redis client is closed. Skipping cache.');
-    return next();
+    console.error('⚠️ Redis client is closed. Skipping cache.');
+    next();
+    return;
+  }
+
+
+  if (req.method !== 'GET') {
+    next();
+    return;
   }
 
   const key = req.originalUrl;
 
   try {
-    const data = await redisClient.get(key);
-    if (data) {
-      console.log('From Cache => ', key);
-      return res.json(JSON.parse(data));
+  
+    const cachedData = await redisClient.get(key);
+    
+    if (cachedData) {
+      console.log('🚀 Serving from Cache => ', key);
+      res.status(200).json(JSON.parse(cachedData));
+      return; 
     }
 
-    console.log('Caching => ', key);
+    console.log('📝 Caching process started for => ', key);
 
-  
-    res.sendResponse = res.json.bind(res);
 
+    const originalJson = res.json.bind(res);
+
+   
     res.json = (body: any): Response => {
- 
-      const cacheTime = parseInt(process.env.REDIS_CACHE_TIME || '3600');
-      redisClient.setEx(key, cacheTime, JSON.stringify(body));
+   
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        const cacheTime = parseInt(process.env.REDIS_CACHE_TIME || '3600');
+        
+        redisClient.setEx(key, cacheTime, JSON.stringify(body)).catch(err => {
+          console.error('❌ Redis SetEx Error:', err);
+        });
+      }
       
-  
-      return res.sendResponse!(body);
+      return originalJson(body);
     };
 
     next();
   } catch (err) {
-    console.error('Redis Error:', err);
+    console.error('⚠️ Redis Middleware Error:', err);
     next();
   }
 };

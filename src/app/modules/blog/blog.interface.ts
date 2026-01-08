@@ -7,7 +7,7 @@ export interface IBlog {
   summary?: string;
   featuredImage?: string;
   tags?: string[];
-  categories?: string[];
+  category?: string;
   status: 'draft' | 'published';
   publishedAt?: Date;
   meta: {

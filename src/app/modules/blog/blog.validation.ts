@@ -13,7 +13,7 @@ const blogSchema = z.object({
     summary: z.string().optional(),
     featuredImage: z.string().url('Invalid image URL').optional(),
     tags: z.array(z.string()).optional(),
-    categories: z.array(z.string()).optional(),
+    category: z.string().optional(),
     status: z.enum(['draft', 'published']).default('draft'),
     metadata: metadataValidationSchema,
    
@@ -27,9 +27,9 @@ const updateBlogSchema = z.object({
     summary: z.string().optional(),
     featuredImage: z.string().url().optional(),
     tags: z.array(z.string()).optional(),
-    categories: z.array(z.string()).optional(),
+    category: z.string().optional(),
     status: z.enum(['draft', 'published']).optional(),
-    metadata: metadataValidationSchema.partial().optional(), // 
+    metadata: metadataValidationSchema.partial().optional(), 
   }),
 });
 

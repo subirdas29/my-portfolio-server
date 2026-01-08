@@ -25,7 +25,7 @@ const blogSchema = new Schema({
   summary: String,
   featuredImage: String, 
   tags: [{ type: String }],
-  categories: [{ type: String }],
+  category: { type: String },
   status: {
     type: String,
     enum: ['draft', 'published'],

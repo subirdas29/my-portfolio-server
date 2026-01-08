@@ -5,30 +5,31 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import { TProject } from './project.interface';
 import { Project } from './project.model';
+import { generateSlug } from '../blog/blog.utils';
 
 const createProject = async (payload: TProject) => {
+ 
+  const baseSlug = generateSlug(payload.title);
 
-  const keyFeaturesArray = Array.isArray(payload.keyFeatures)
-  ? payload.keyFeatures 
-  : payload.keyFeatures?.split(",").map((key:string) => key.trim()) || []; 
+ 
+  const existingProject = await Project.findOne({ slug: baseSlug });
 
+  if (existingProject) {
   
-  const technologiesArray = Array.isArray(payload.technologies)
-    ? payload.technologies 
-    : payload.technologies?.split(",").map((tech:string) => tech.trim()) || []; 
+    payload.slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
+  } else {
+    payload.slug = baseSlug;
+  }
+
 
   const projectData: TProject = {
     ...payload,
-    keyFeatures: keyFeaturesArray,
-    technologies: technologiesArray,
-  };
   
-
+  };
 
   const result = await Project.create(projectData);
   return result;
 };
-
 
 const getAllProject = async (query: Record<string, unknown>) => {
   const projectQuery = new QueryBuilder(Project.find(), query).search(['title', 'details']) 

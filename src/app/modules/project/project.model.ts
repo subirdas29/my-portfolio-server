@@ -5,12 +5,19 @@ import { projectType } from './project.constant';
 const ProjectSchema = new Schema<TProject>(
   {
     title: { type: String, required: true },
+      slug: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+ 
     projectType: { type: String, enum: projectType, default: "Full-Stack" },
     details: { type: String, required: true },
     keyFeatures: { 
-      type: [String], 
+      type: String, 
       required: true, 
-      default: []  
     },
     order: { type: Number, default: 0 },
     technologies: { 
@@ -19,7 +26,7 @@ const ProjectSchema = new Schema<TProject>(
       default: []  
     },
     liveLink: { type: String, required: true },
-    clientGithubLink: { type: String, required: true },
+    clientGithubLink: { type: String, default:"" },
     serverGithubLink: { type: String,default:""},
     imageUrls: { type: [String], required: true },
   },

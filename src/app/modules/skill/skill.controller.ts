@@ -2,23 +2,13 @@ import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { SkillServices } from "./skill.service";
-import redisClient from "../../utils/redis";
-
-
-
-const clearSkillCache = async () => {
-  if (redisClient.isOpen) {
-  
-    await redisClient.del('/api/skills'); 
-    console.log('🧹 Skill Cache Cleared');
-  }
-};
+import { CacheUtils } from "../../utils/CacheUtils";
 
 const createSkillController = catchAsync(async (req, res) => {
     const result = await SkillServices.createSkill(req.body);
     
-    // নতুন স্কিল যোগ হলে ক্যাশ মুছতে হবে
-    await clearSkillCache();
+  
+    await CacheUtils.clearCache(['/api/v1/skills*']);
 
     sendResponse(res, {
       statusCode: httpStatus.CREATED,
@@ -26,7 +16,7 @@ const createSkillController = catchAsync(async (req, res) => {
       message: 'Skill is created successfully',
       data: result,
     });
-  });
+});
 
 const getAllSkill = catchAsync(async (req, res) => {
     const result = await SkillServices.getAllSkill(req.query);
@@ -42,8 +32,8 @@ const getAllSkill = catchAsync(async (req, res) => {
 const updateSkillOrderController = catchAsync(async (req, res) => {
   const result = await SkillServices.updateSkillOrder(req.body);
 
- 
-  await clearSkillCache();
+  
+  await CacheUtils.clearCache(['/api/v1/skills*']);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -57,13 +47,14 @@ const deleteOwnSkillController = catchAsync(async (req, res) => {
     const { id } = req.params;
     await SkillServices.getdeleteSkill(id);
   
-    
-    await clearSkillCache();
+ 
+    await CacheUtils.clearCache(['/api/v1/skills*']);
 
-    res.status(httpStatus.OK).json({
-      success: true,
-      message: 'Skill deleted successfully',
-      statusCode: httpStatus.OK,
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Skill deleted successfully',
+        data: null
     });
 });
 

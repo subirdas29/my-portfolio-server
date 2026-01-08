@@ -23,6 +23,8 @@ const createBlog = async (payload: IBlog) => {
   }
 
   const result = await Blog.create(payload);
+
+
   return result;
 };
 
