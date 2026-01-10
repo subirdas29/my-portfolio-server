@@ -1,13 +1,16 @@
 // import { User } from '../User/user.model';
 
 import QueryBuilder from '../../builder/QueryBuilder';
-import emailQueue from '../../queues/emailQueue';
+import sendEmail from '../../utils/sendEmail';
+
 
 import { TMessage } from './message.interface';
 import { Message } from './message.model';
 
 const createMessage = async (payload: TMessage) => {
+ 
   const result = await Message.create(payload);
+
 
   const htmlContent = `
     <div style="font-family: sans-serif; max-width: 600px; border: 1px solid #eee; padding: 20px; border-radius: 15px;">
@@ -22,21 +25,14 @@ const createMessage = async (payload: TMessage) => {
     </div>
   `;
 
-  try {
 
-    await emailQueue.add(
-      {
-        subject: `New Message: ${payload.subject}`,
-        html: htmlContent,
-      },
-      {
-        attempts: 3, 
-        backoff: 5000, 
-        removeOnComplete: true, 
-      }
-    );
+  try {
+    await sendEmail({
+      subject: `New Message: ${payload.subject}`,
+      html: htmlContent,
+    });
   } catch (err) {
-    console.error('Queue Error:', err);
+    console.error('Email sending failed:', err);
   }
 
   return result;
