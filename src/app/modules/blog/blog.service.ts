@@ -28,9 +28,9 @@ const createBlog = async (payload: IBlog) => {
   return result;
 };
 
-  const getSingleBlog = async (blogId: string) => {
-    const result = await Blog.findById(blogId)
-  
+  const getSingleBlog = async (slug: string) => {
+    const result = await Blog.findOne({ slug });
+
     if (!result) {
        throw new AppError(httpStatus.NOT_FOUND, 'Blog not found');
     }

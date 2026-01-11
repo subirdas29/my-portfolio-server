@@ -1,6 +1,7 @@
 export type TProject = {
   title: string;
-   slug: string;
+  slug: string;
+  shortDescription:string;
   projectType: "Full-Stack" | "Front-End";
   details: string;
   keyFeatures: string; 

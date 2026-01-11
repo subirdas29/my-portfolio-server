@@ -31,6 +31,6 @@ router.delete(
 );
 
 router.get('/', cache, BlogController.getAllBlogController);
-router.get('/blog/:blogId', cache, BlogController.getSingleBlog);
+router.get('/blog/:slug', cache, BlogController.getSingleBlog);
 
 export const BlogRoutes = router;

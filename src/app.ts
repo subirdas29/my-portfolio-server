@@ -55,8 +55,8 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-      'https://subirdas-portfolio.vercel.app', 
-      'http://localhost:5173',
+      'https://subirdas-portfolio.vercel.app',
+      'https://my-portfolio-dashboard-six.vercel.app',
       'http://localhost:3000', 
       'http://localhost:3001' 
     ],

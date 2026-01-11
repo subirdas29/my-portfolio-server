@@ -15,7 +15,7 @@ router.post(
 
 
 router.get('/', cache, ProjectController.getAllProjectController);
-router.get('/project/:projectId', cache, ProjectController.getSingleProjectController);
+router.get('/project/:slug', cache, ProjectController.getSingleProjectController);
 
 router.patch(
   '/edit-project/:id',
