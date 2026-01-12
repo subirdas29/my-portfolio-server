@@ -13,7 +13,7 @@ const app: Application = express();
 
 app.set('trust proxy', 1);
 
-// Helmet CSP আপডেট করা হয়েছে যাতে Cloudinary ইমেজ লোড হতে পারে
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -21,7 +21,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com"], 
-      connectSrc: ["'self'", "https://res.cloudinary.com"], // এখানেও Cloudinary অ্যাড করুন
+      connectSrc: ["'self'", "https://res.cloudinary.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
