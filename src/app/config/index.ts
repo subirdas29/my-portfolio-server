@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { Resend } from 'resend';
 
-dotenv.config({ path: path.join((process.cwd(), '.env')) });
+dotenv.config({ path: path.join(process.cwd(), '.env') });
 
 export default {
   NODE_ENV: process.env.NODE_ENV,
@@ -15,6 +15,10 @@ export default {
   jwt_refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
   admin_password: process.env.ADMIN_PASSWORD,
   resend: new Resend(process.env.RESEND_API_KEY),
-  redis_url: process.env.REDIS_URL,
-  redis_cache_time: parseInt(process.env.REDIS_CACHE_TIME || '3600'),
+  cache_time: parseInt(process.env.CACHE_TIME || '3600'),
+  gemini_api_key: process.env.GEMINI_API_KEY,
+  pinecone_api_key: process.env.PINECONE_API_KEY,
+  pinecone_index: process.env.PINECONE_INDEX,
+  portfolio_url: process.env.PORTFOLIO_URL,
+  openrouter_api_key: process.env.OPENROUTER_API_KEY,
 };

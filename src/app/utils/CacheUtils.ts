@@ -1,44 +1,20 @@
-import redisClient from "./redis";
+import NodeCache from 'node-cache';
+import config from '../config';
+
+const nodeCache = new NodeCache({ stdTTL: config.cache_time });
 
 export class CacheUtils {
+  static clearCache(patterns: string[]): void {
+    const keys = nodeCache.keys();
+    const keysToDelete = keys.filter((key) =>
+      patterns.some((pattern) => key.includes(pattern)),
+    );
 
-  static async clearCache(patterns: string[]): Promise<void> {
-    try {
-      if (!redisClient.isOpen) {
-        console.warn('⚠️ Redis connection is closed. Skipping cache clear.');
-        return;
-      }
-
-      const allKeys: string[] = [];
-
-      for (const pattern of patterns) {
-      
-        let cursor = '0'; 
-        
-        do {
-          const reply = await redisClient.scan(cursor, {
-            MATCH: pattern,
-            COUNT: 100,
-          });
-
-        
-          cursor = reply.cursor;
-          
-          if (reply.keys.length > 0) {
-            allKeys.push(...reply.keys);
-          }
-          
-
-        } while (cursor !== '0'); 
-      }
-
-      if (allKeys.length > 0) {
-        const uniqueKeys = [...new Set(allKeys)];
-        await redisClient.del(uniqueKeys);
-        console.log(`🧹 Cache Purged: ${uniqueKeys.length} items for patterns [${patterns}]`);
-      }
-    } catch (error) {
-      console.error('❌ Redis Cache Clear Error:', error);
+    if (keysToDelete.length > 0) {
+      nodeCache.del(keysToDelete);
+      console.log(
+        `🧹 Cache Purged: ${keysToDelete.length} items for patterns [${patterns}]`,
+      );
     }
   }
 }

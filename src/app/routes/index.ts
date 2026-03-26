@@ -7,6 +7,7 @@ import { SkillRoutes } from '../modules/skill/skill.route';
 import { AuthRoutes } from '../modules/auth/auth.route';
 
 import { fileUploadRoutes } from '../modules/fileUpload/fileUpload.route';
+import { AIRoutes } from '../modules/ai/ai.route';
 
 const router = Router();
 
@@ -34,6 +35,10 @@ const moduleRoutes = [
   {
     path: '/upload',
     route: fileUploadRoutes,
+  },
+  {
+    path: '/ai',
+    route: AIRoutes,
   },
 ];
 
