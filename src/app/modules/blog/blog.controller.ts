@@ -2,11 +2,10 @@ import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { BlogServices } from './blog.service';
-import { CacheUtils } from '../../utils/CacheUtils'; 
+import { CacheUtils } from '../../utils/CacheUtils';
 
 const createBlogController = catchAsync(async (req, res) => {
   const result = await BlogServices.createBlog(req.body);
-
 
   await CacheUtils.clearCache(['/api/v1/blogs*']);
 
@@ -26,17 +25,15 @@ const getSingleBlog = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Blog fetched successfully',
-    data: result
+    data: result,
   });
 });
 
 const updateOwnBlogController = catchAsync(async (req, res) => {
   const { id } = req.params;
   const result = await BlogServices.updateOwnBlogByUser(id, req.body);
-  
 
-  const cacheKeys = ['/api/v1/blogs*', `*/${id}*` ];
-
+  const cacheKeys = ['/api/v1/blogs*', `*/${id}*`];
 
   if (result && result.slug) {
     cacheKeys.push(`*/${result.slug}*`);
@@ -54,11 +51,10 @@ const updateOwnBlogController = catchAsync(async (req, res) => {
 
 const deleteOwnBlogController = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const project =await BlogServices.deleteOwnBlogByUser(id);
+  const project = await BlogServices.deleteOwnBlogByUser(id);
 
+  const cacheKeys = ['/api/v1/blogs*', `*/${id}*`];
 
-  const cacheKeys = ['/api/v1/blogs*', `*/${id}*` ];
-  
   if (project && 'slug' in project) {
     cacheKeys.push(`*/${project.slug}*`);
   }
@@ -69,17 +65,19 @@ const deleteOwnBlogController = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Blog deleted successfully',
-    data: null, 
+    data: null,
   });
 });
 
 const getAllBlogController = catchAsync(async (req, res) => {
   const result = await BlogServices.getAllBlog(req.query);
+  console.log('Blogs fetched:', result.result.length, 'Meta :', result.meta);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Blogs fetched successfully',
-    data: result,
+    meta: result.meta,
+    data: result.result,
   });
 });
 
@@ -88,5 +86,5 @@ export const BlogController = {
   updateOwnBlogController,
   deleteOwnBlogController,
   getAllBlogController,
-  getSingleBlog
+  getSingleBlog,
 };

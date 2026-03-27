@@ -83,6 +83,15 @@ async function syncAllToPinecone() {
     }
     console.log(`✅ Skills synced\n`);
 
+    // Sync Static Data (Experience, Education, About Me)
+    console.log(`🔄 Syncing experience, education, about me to Pinecone...`);
+    try {
+      await AIServices.upsertAllStaticDataToAI();
+      console.log(`✅ Static data synced\n`);
+    } catch (err) {
+      console.error(`❌ Failed to sync static data:`, err);
+    }
+
     console.log(`🎉 All data synced to Pinecone successfully!`);
   } catch (err) {
     console.error('⚠️ Error during sync:', err);

@@ -14,6 +14,15 @@ const app: Application = express();
 
 app.set('trust proxy', 1);
 
+// Health check route — placed BEFORE all middleware (helmet, rate limiter,
+// compression, json parser, cors, routers) so it returns instantly with
+// zero DB/AI/token overhead. Used by Cron Job / UptimeRobot to ping
+// every ~5 min to keep the Render Free Tier instance 'warm' and prevent
+// the 15-minute sleep mode from triggering.
+app.get('/api/v1/health', (req: Request, res: Response) => {
+  res.status(200).json({ status: 'alive', timestamp: new Date() });
+});
+
 app.use(
   helmet({
     contentSecurityPolicy: {

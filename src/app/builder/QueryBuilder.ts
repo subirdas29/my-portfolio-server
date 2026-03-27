@@ -26,7 +26,7 @@ class QueryBuilder<T> {
   }
 
   filter() {
-    const queryObj = { ...this.query }; 
+    const queryObj = { ...this.query };
 
     // Filtering
     const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
@@ -38,20 +38,26 @@ class QueryBuilder<T> {
     return this;
   }
 
-sort(defaultSort: string = '-createdAt') { 
-  const sort =
-    (this?.query?.sort as string)?.split(',')?.join(' ') || defaultSort;
-  this.modelQuery = this.modelQuery.sort(sort as string);
+  sort(defaultSort: string = '-createdAt') {
+    const sort =
+      (this?.query?.sort as string)?.split(',')?.join(' ') || defaultSort;
+    this.modelQuery = this.modelQuery.sort(sort as string);
 
-  return this;
-}
+    return this;
+  }
 
   paginate() {
-    const page = Number(this?.query?.page) || 1;
-    const limit = Number(this?.query?.limit) || 10;
-    const skip = (page - 1) * limit;
+    const page = Number(this?.query?.page);
+    const limit = Number(this?.query?.limit);
 
-    this.modelQuery = this.modelQuery.skip(skip).limit(limit);
+    // Only paginate if at least one param is explicitly provided
+    if (!limit && !page) return this;
+
+    const resolvedPage = page || 1;
+    const resolvedLimit = limit || 10;
+    const skip = (resolvedPage - 1) * resolvedLimit;
+
+    this.modelQuery = this.modelQuery.skip(skip).limit(resolvedLimit);
 
     return this;
   }
@@ -68,13 +74,13 @@ sort(defaultSort: string = '-createdAt') {
     const totalQuery = this.modelQuery.getFilter();
     const total = await this.modelQuery.model.countDocuments(totalQuery);
     const page = Number(this?.query?.page) || 1;
-    const limit = Number(this?.query?.limit) || 10;
+    const limit = Number(this?.query?.limit) || total || 10;
     const totalPage = Math.ceil(total / limit);
 
     return {
       total,
       page,
-      limit,
+      limit: Number(this?.query?.limit) || total,
       totalPage,
     };
   }

@@ -3,15 +3,56 @@ import { Pinecone } from '@pinecone-database/pinecone';
 import { Project } from '../project/project.model';
 import { Skill } from '../skill/skill.model';
 import { Blog } from '../blog/blog.model';
+import {
+  detectTechQuery,
+  detectSkillQuery,
+  detectBlogQuery,
+  detectBlogCountQuery,
+  detectSkillCountQuery,
+  detectProjectCountQuery,
+  detectPortfolioOverview,
+  detectGreeting,
+  detectAllProjectsQuery,
+  detectFollowUp,
+  extractTechFromHistory,
+  isSkillFromHistory,
+  isBlogFromHistory,
+  getFallbackMessage,
+  getContactMessage,
+  detectExperienceQuery,
+  detectEducationQuery,
+  detectAboutMeQuery,
+  detectExperienceDurationQuery,
+  detectJobExperienceQuery,
+  detectCapabilityQuery,
+  detectFreelancingQuery,
+  detectAIAutomationQuery,
+} from '../../utils/aiChatDetection';
+import {
+  EXPERIENCE_DATA,
+  EDUCATION_DATA,
+  ABOUT_ME_DATA,
+  buildExperienceContext,
+  buildEducationContext,
+  buildAboutMeContext,
+} from '../../data/portfolioStaticData';
+import {
+  buildJobExperienceResponse,
+  buildExperienceDurationResponse,
+  buildFreelancingResponse,
+  buildCapabilityResponse,
+  buildNegativeFallbackResponse,
+  extractCapabilityWhat,
+} from '../../data/fixedIntents';
+import { getEmbedding } from '../../middlewares/embedding';
+import { generateResponse } from '../../middlewares/responseGeneration';
+
+// ==================== Pinecone Client ====================
 
 let pineconeClient: Pinecone | null = null;
 
 const getPinecone = (): Pinecone => {
   if (!pineconeClient) {
-    console.log(
-      'PINECONE_API_KEY:',
-      process.env.PINECONE_API_KEY ? 'present' : 'MISSING',
-    );
     pineconeClient = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY!,
     });
@@ -27,104 +68,7 @@ const SITE_URL = process.env.PORTFOLIO_URL || 'http://localhost:3000';
 const PROJECT_DETAILS_URL = (slug: string) =>
   `${SITE_URL}/all-projects/projectDetails/${slug}`;
 const ALL_PROJECTS_URL = `${SITE_URL}/all-projects`;
-
-const SYSTEM_PROMPT = `You are Subir Das's Professional AI Assistant. Your role is to help visitors learn about Subir's portfolio, skills, projects, and professional background.
-
-RESPONSE GUIDELINES:
-1. ALWAYS respond in the SAME LANGUAGE as the user (English, Bengali, or Banglish)
-2. For greetings, use neutral friendly greetings like "Hello", "Hi", "Hey" — do NOT use religious greetings like "Assalamu Alaikum", "Namaste", etc.
-3. Use ONLY the provided context to answer. If information is not in context, politely say you don't have that info
-4. Be concise but informative
-5. For greetings like "hello", "hi" — greet warmly and introduce yourself as Subir's AI assistant
-6. Show respect and professionalism at all times
-7. MAINTAIN CONVERSATION CONTEXT: If the user's message is a follow-up (like "what are those?", "tell me more", "ki ki dao", "oigula"), refer to the PREVIOUS topic discussed. Do NOT reset to a greeting.
-
-BANGLA SPELLING RULES (VERY IMPORTANT):
-7a. When responding in Bengali/Banglish, ALL words must be spelled CORRECTLY. No typos allowed.
-7b. Use proper Bengali Unicode characters. Double-check every word before responding.
-7c. Common correct spellings: "প্রকল্প" (not "প্রোজেক্ট"), "দক্ষতা" (not "স্কিল"), "ব্লগ" (not "ব্লগ")
-7d. If unsure about a Bengali word spelling, use the English equivalent instead.
-
-PROJECT RESPONSE RULES (VERY IMPORTANT - READ CAREFULLY):
-8. When showing projects, the project cards will be rendered AUTOMATICALLY by the frontend as template cards with image, title, type, technologies, and "View Details" button
-9. DO NOT describe project details in your text response — the frontend handles card rendering
-10. Just mention the COUNT and optionally a brief one-line summary
-11. Example response for "Next.js projects": "Next.js দিয়ে ২টি প্রকল্প আছে। নিচে দেখুন:" then the frontend shows the cards
-12. Example response for "how many projects": "সাবিরের মোট ৫টি প্রকল্প আছে। নিচে দেখুন:" then the frontend shows the cards
-13. Example response for "all projects": "মোট ৫টি প্রকল্প আছে। নিচে দেখুন:" then the frontend shows 2 cards + "View All" card
-14. NEVER include project titles, descriptions, technologies, or links in your text — the cards will show all that
-
-COUNTING RULES:
-14. When asked "how many projects/skills/blogs" use the EXACT count provided in context. NEVER guess or estimate.
-15. For count-only queries (like "blog koita", "skill koto", "how many projects"), respond with ONLY the count — do NOT list all items or show template cards
-16. Example: "blog koita?" → "সাবিরের মোট ৩টি ব্লগ আছে।" — nothing more
-17. Example: "skill koita?" → "সাবিরের মোট ৫টি skill category আছে।" — nothing more
-18. Skills count = number of skill categories (each skill title is one category)
-19. Blogs count = number of published blogs
-20. Projects count = total projects, or filtered by technology if context says so
-
-SKILLS DISPLAY:
-18. When listing skills, show the count and list ALL skill category names from context
-19. Format: "Subir has X skill categories:" then list each with its technologies
-20. NEVER show skill image/logo URLs - only show skill names and technologies
-
-PORTFOLIO OVERVIEW DISPLAY (when user asks about Subir's portfolio/overview/about):
-21. Use this EXACT sequence (industry standard):
-    - Skills (with count and all categories)
-    - Projects (with count — cards will render automatically)
-    - Experience (with count and details if available)
-    - Education (with count and details if available)
-    - About Me (if available)
-    - Blogs (with count and blog titles)
-22. Skills: List ALL skill categories by name with technologies - NO images
-23. Projects: Just mention count, cards render automatically
-24. Experience: Show count and details if available in context, otherwise say "Not yet added"
-25. Education: Show count and details if available in context, otherwise say "Not yet added"
-26. About Me: Show if available in context, otherwise say "Not yet added"
-27. Blogs: Show count AND list each blog title with link
-
-BLOGS DISPLAY:
-28. When listing blogs, show the count and blog titles with links
-29. Format: Each blog title should be a clickable link
-
-FOLLOW-UP QUERY HANDLING (VERY IMPORTANT):
-30. Short follow-up questions like "what are those?", "ki ki?", "oigula?", "tell me more", "বিস্তারিত বলো" mean the user wants DETAILS about the PREVIOUS topic
-31. If the previous message was about Next.js projects, and user says "ki ki?" — respond briefly, cards will render automatically
-32. If the previous message was about skills, and user says "tell me more" — show the skill list with technologies
-33. Do NOT greet again for follow-up messages
-34. Do NOT say "আপনি কী জিজ্ঞেস করছেন?" or "What are you asking?" — just show the relevant data
-35. Continue the conversation naturally based on the data provided in context
-
-If you don't have information about a specific topic, politely suggest contacting Subir at Email: subirdas1045@gmail.com or LinkedIn: https://www.linkedin.com/in/subirdas29/`;
-
-const FALLBACK_MESSAGE =
-  "I only have information about Subir's professional work. For this, please contact him directly at Email: subirdas1045@gmail.com, or LinkedIn: https://www.linkedin.com/in/subirdas29/.";
-
-// ==================== Embedding ====================
-
-export const getEmbedding = async (text: string): Promise<number[]> => {
-  const apiKey = process.env.GEMINI_API_KEY!;
-  const url =
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent';
-
-  const response = await fetch(`${url}?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: { parts: [{ text }] },
-      taskType: 'SEMANTIC_SIMILARITY',
-      outputDimensionality: 768,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Embedding API error: ${error}`);
-  }
-
-  const data = await response.json();
-  return data.embedding?.values || [];
-};
+const FALLBACK_MESSAGE = getFallbackMessage(SITE_URL);
 
 // ==================== Document Types ====================
 
@@ -138,7 +82,23 @@ export interface IProjectDoc {
   liveLink: string;
   projectType: string;
   tags?: string[];
-  imageUrls?: string[];
+}
+
+export interface IBlogDoc {
+  _id: string | unknown;
+  title: string;
+  content: string;
+  summary?: string;
+  tags?: string[];
+  category?: string;
+  publishedAt?: Date;
+}
+
+export interface ISkillDoc {
+  _id: string | unknown;
+  title: string;
+  logo: string[];
+  order?: number;
 }
 
 export interface IProjectCard {
@@ -152,14 +112,10 @@ export interface IProjectCard {
   technologies: string[];
 }
 
-export interface IBlogDoc {
-  _id: string | unknown;
+export interface ISkillCard {
+  _id: string;
   title: string;
-  content: string;
-  summary?: string;
-  tags?: string[];
-  category?: string;
-  publishedAt?: Date;
+  logo: string[];
 }
 
 export interface IBlogCard {
@@ -171,63 +127,61 @@ export interface IBlogCard {
   featuredImage: string;
 }
 
-export interface ISkillDoc {
-  _id: string | unknown;
-  title: string;
-  logo: string[];
-  order: number;
-}
-
-export interface ISkillCard {
-  _id: string;
-  title: string;
-  logo: string[];
-}
-
-// ==================== Context Creation ====================
+// ==================== Context Builders ====================
 
 const createProjectContext = (doc: IProjectDoc): string => {
-  const tags = doc.tags?.join(', ') || doc.technologies.join(', ');
-  const image = doc.imageUrls?.[0] || 'No image available';
-  return `PROJECT: ${doc.title}. Type: ${doc.projectType}. Description: ${doc.shortDescription} ${doc.details}. Features: ${doc.keyFeatures}. Technologies: ${doc.technologies.join(', ')}. Tags: ${tags}. Live Link: ${doc.liveLink}. Image: ${image}`;
+  return [
+    `PROJECT: ${doc.title}`,
+    `Description: ${doc.shortDescription}`,
+    `Details: ${doc.details}`,
+    `Key Features: ${doc.keyFeatures}`,
+    `Technologies: ${doc.technologies.join(', ')}`,
+    `Live: ${doc.liveLink}`,
+    `Type: ${doc.projectType}`,
+    `Tags: ${(doc.tags || []).join(', ')}`,
+  ].join('\n');
 };
-
-const createBlogContext = (doc: IBlogDoc): string => {
-  return `BLOG: ${doc.title}. Category: ${doc.category || 'General'}. Summary: ${doc.summary || ''}. Content: ${doc.content.substring(0, 500)}. Tags: ${doc.tags?.join(', ') || 'none'}. Published: ${doc.publishedAt?.toDateString() || 'N/A'}`;
-};
-
-const createSkillContext = (doc: ISkillDoc): string => {
-  const technologies = doc.logo.filter((item) => !item.startsWith('http'));
-  return `SKILL: ${doc.title}. Technologies: ${technologies.join(', ')}.`;
-};
-
-// ==================== Metadata Creation ====================
 
 const createProjectMetadata = (doc: IProjectDoc) => ({
   title: doc.title,
-  content: createProjectContext(doc),
-  link: doc.liveLink,
+  content: `${doc.shortDescription} ${doc.details}`.slice(0, 8000),
   type: 'project',
+  link: doc.liveLink,
   technologies: doc.technologies.join(', '),
-  category: doc.projectType,
+  category: doc.projectType || 'Full-Stack',
 });
+
+const createBlogContext = (doc: IBlogDoc): string => {
+  return [
+    `BLOG: ${doc.title}`,
+    `Summary: ${doc.summary || ''}`,
+    `Category: ${doc.category || ''}`,
+    `Tags: ${(doc.tags || []).join(', ')}`,
+    `Content: ${doc.content}`,
+  ].join('\n');
+};
 
 const createBlogMetadata = (doc: IBlogDoc) => ({
   title: doc.title,
-  content: createBlogContext(doc),
-  link: '',
+  content: `${doc.summary || ''} ${doc.content}`.slice(0, 8000),
   type: 'blog',
+  link: '',
+  technologies: (doc.tags || []).join(', '),
   category: doc.category || 'General',
-  tags: doc.tags?.join(', ') || '',
 });
+
+const createSkillContext = (doc: ISkillDoc): string => {
+  const technologies = doc.logo.filter((item) => !item.startsWith('http'));
+  return `SKILL CATEGORY: ${doc.title}\nTechnologies: ${technologies.join(', ')}`;
+};
 
 const createSkillMetadata = (doc: ISkillDoc) => {
   const technologies = doc.logo.filter((item) => !item.startsWith('http'));
   return {
     title: doc.title,
-    content: createSkillContext(doc),
-    link: '',
+    content: technologies.join(', '),
     type: 'skill',
+    link: '',
     technologies: technologies.join(', '),
     category: 'Technical Skill',
   };
@@ -283,6 +237,78 @@ export const upsertSkillToAI = async (doc: ISkillDoc): Promise<void> => {
   });
 };
 
+export const upsertExperienceToAI = async (): Promise<void> => {
+  const index = getPinecone().Index(process.env.PINECONE_INDEX!);
+  const records = await Promise.all(
+    EXPERIENCE_DATA.map(async (exp, i) => {
+      const context = `EXPERIENCE: ${exp.title} at ${exp.company} (${exp.duration}). ${exp.description}`;
+      const embedding = await getEmbedding(context);
+      return {
+        id: `experience_${i}`,
+        values: embedding,
+        metadata: {
+          title: `${exp.title} at ${exp.company}`,
+          content: context,
+          type: 'experience',
+          company: exp.company,
+          duration: exp.duration,
+        },
+      };
+    }),
+  );
+  await index.namespace(NAMESPACE).upsert({ records });
+};
+
+export const upsertEducationToAI = async (): Promise<void> => {
+  const index = getPinecone().Index(process.env.PINECONE_INDEX!);
+  const records = await Promise.all(
+    EDUCATION_DATA.map(async (edu, i) => {
+      const context = `EDUCATION: ${edu.degree} from ${edu.institution} (${edu.duration}). ${edu.description}`;
+      const embedding = await getEmbedding(context);
+      return {
+        id: `education_${i}`,
+        values: embedding,
+        metadata: {
+          title: `${edu.degree} - ${edu.institution}`,
+          content: context,
+          type: 'education',
+          institution: edu.institution,
+          duration: edu.duration,
+        },
+      };
+    }),
+  );
+  await index.namespace(NAMESPACE).upsert({ records });
+};
+
+export const upsertAboutMeToAI = async (): Promise<void> => {
+  const embedding = await getEmbedding(ABOUT_ME_DATA);
+  const index = getPinecone().Index(process.env.PINECONE_INDEX!);
+  await index.namespace(NAMESPACE).upsert({
+    records: [
+      {
+        id: 'aboutme_0',
+        values: embedding,
+        metadata: {
+          title: 'About Subir Das',
+          content: ABOUT_ME_DATA,
+          type: 'aboutme',
+        },
+      },
+    ],
+  });
+};
+
+export const upsertAllStaticDataToAI = async (): Promise<void> => {
+  console.log('Upserting experience, education, about me to Pinecone...');
+  await Promise.all([
+    upsertExperienceToAI(),
+    upsertEducationToAI(),
+    upsertAboutMeToAI(),
+  ]);
+  console.log('All static data upserted successfully.');
+};
+
 export const deleteFromAI = async (id: string): Promise<void> => {
   const index = getPinecone().Index(process.env.PINECONE_INDEX!);
   await index.namespace(NAMESPACE).deleteOne({ id });
@@ -317,104 +343,7 @@ export const searchPinecone = async (
   }));
 };
 
-// ==================== Response Generation ====================
-
-const GEMINI_BASE_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-const callGemini = async (
-  apiKey: string,
-  systemInstruction: string,
-  userQuestion: string,
-  history?: { role: 'user' | 'assistant'; content: string }[],
-): Promise<string> => {
-  const contents: { role: string; parts: { text: string }[] }[] = [];
-
-  if (history && history.length > 0) {
-    for (const h of history) {
-      contents.push({
-        role: h.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: h.content }],
-      });
-    }
-  }
-
-  contents.push({
-    role: 'user',
-    parts: [{ text: userQuestion }],
-  });
-
-  const response = await fetch(`${GEMINI_BASE_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: systemInstruction }],
-      },
-      contents,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1024,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API error (${response.status}): ${errorText}`);
-  }
-
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-};
-
-export const generateResponse = async (
-  context: string,
-  userQuestion: string,
-  history?: { role: 'user' | 'assistant'; content: string }[],
-): Promise<string | null> => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    console.error('GEMINI_API_KEY is not configured');
-    return null;
-  }
-
-  const systemMessage = `${SYSTEM_PROMPT}\n\nContext:\n${context}`;
-
-  const MAX_RETRIES = 2;
-  for (let retry = 0; retry <= MAX_RETRIES; retry++) {
-    try {
-      const response = await callGemini(
-        apiKey,
-        systemMessage,
-        userQuestion,
-        history,
-      );
-      if (response) return response;
-      return null;
-    } catch (err: unknown) {
-      const isRateLimited =
-        err instanceof Error &&
-        (err.message.includes('429') ||
-          err.message.includes('RESOURCE_EXHAUSTED'));
-      const isLastRetry = retry === MAX_RETRIES;
-
-      if (isRateLimited && !isLastRetry) {
-        await sleep(1000 * (retry + 1));
-        continue;
-      }
-
-      console.error('Gemini API failed:', err);
-      return null;
-    }
-  }
-
-  return null;
-};
-
-// ==================== Chat ====================
+// ==================== Chat Types ====================
 
 export interface IChatResult {
   success: boolean;
@@ -526,322 +455,140 @@ export const getProjectCountByTech = async (
   return Project.countDocuments({ technologies: { $regex: regex } });
 };
 
-const TECH_KEYWORDS = [
-  'next.js',
-  'nextjs',
-  'react',
-  'node',
-  'express',
-  'mongodb',
-  'typescript',
-  'javascript',
-  'python',
-  'tailwind',
-  'firebase',
-  'redux',
-  'graphql',
-  'angular',
-  'vue',
-  'docker',
-  'aws',
-  'html',
-  'css',
-  'bootstrap',
-  'three.js',
-  'socket',
-  'jwt',
-  'rest',
-  'api',
-  'prisma',
-  'postgresql',
-  'mysql',
-];
-
-const detectTechQuery = (message: string): string | null => {
-  const lower = message.toLowerCase();
-  for (const tech of TECH_KEYWORDS) {
-    if (lower.includes(tech)) {
-      return tech;
-    }
-  }
-  return null;
-};
-
-const detectSkillQuery = (message: string): boolean => {
-  const lower = message.toLowerCase();
-  return (
-    lower.includes('skill') ||
-    lower.includes('technology') ||
-    lower.includes('technologies') ||
-    lower.includes('tech stack')
-  );
-};
-
-const detectBlogQuery = (message: string): boolean => {
-  const lower = message.toLowerCase();
-  return (
-    lower.includes('blog') ||
-    lower.includes('article') ||
-    lower.includes('post') ||
-    lower.includes('writing')
-  );
-};
-
-const detectBlogCountQuery = (message: string): boolean => {
-  const lower = message.toLowerCase().trim();
-  return (
-    lower.includes('blog koita') ||
-    lower.includes('blog koto') ||
-    lower.includes('how many blog') ||
-    lower.includes('blogs koita') ||
-    lower.includes('blogs koto') ||
-    lower.includes('koto blog') ||
-    lower.includes('koita blog') ||
-    lower.includes('total blog') ||
-    lower.includes('number of blog')
-  );
-};
-
-const detectSkillCountQuery = (message: string): boolean => {
-  const lower = message.toLowerCase().trim();
-  return (
-    lower.includes('skill koita') ||
-    lower.includes('skill koto') ||
-    lower.includes('how many skill') ||
-    lower.includes('skills koita') ||
-    lower.includes('skills koto') ||
-    lower.includes('koto skill') ||
-    lower.includes('koita skill') ||
-    lower.includes('total skill') ||
-    lower.includes('number of skill')
-  );
-};
-
-const detectProjectCountQuery = (message: string): boolean => {
-  const lower = message.toLowerCase().trim();
-  return (
-    lower.includes('project koita') ||
-    lower.includes('project koto') ||
-    lower.includes('how many project') ||
-    lower.includes('projects koita') ||
-    lower.includes('projects koto') ||
-    lower.includes('koto project') ||
-    lower.includes('koita project') ||
-    lower.includes('total project') ||
-    lower.includes('number of project')
-  );
-};
-
-const detectPortfolioOverview = (message: string): boolean => {
-  const lower = message.toLowerCase();
-  return (
-    lower.includes('portfolio') ||
-    lower.includes('about subir') ||
-    lower.includes('tell me about') ||
-    lower.includes('who is subir') ||
-    lower.includes('overview') ||
-    lower.includes('introduce') ||
-    lower.includes('about yourself')
-  );
-};
-
-const GREETINGS = [
-  // English
-  'hi',
-  'hello',
-  'hey',
-  'hii',
-  'hiii',
-  'heyy',
-  'heyyy',
-  'yo',
-  'sup',
-  'whats up',
-  "what's up",
-  'good morning',
-  'good afternoon',
-  'good evening',
-  'good night',
-  'howdy',
-  'greetings',
-  'hi there',
-  'hello there',
-  'hey there',
-  // Bengali
-  'হাই',
-  'হেলো',
-  'নমস্কার',
-  'নমস্তে',
-  'আসসালামু আলাইকুম',
-  'সালাম',
-  'কেমন আছো',
-  'কেমন আছেন',
-  'কি অবস্থা',
-  'কি খবর',
-  // Banglish
-  'kemon acho',
-  'kemon aco',
-  'kemon acen',
-  'kemon aso',
-  'ki obostha',
-  'ki khobor',
-  'ki khbr',
-  'nomoshkar',
-  'namoskar',
-  'assalamu alaikum',
-  'salam',
-  'koi acho',
-  'koi aco',
-  'tumi kemon acho',
-  'apni kemon achen',
-  // Slang/casual
-  'wassup',
-  'wazzup',
-  'sup',
-  'oy',
-  'oii',
-];
-
-const detectGreeting = (message: string): boolean => {
-  const lower = message.toLowerCase().trim();
-  return GREETINGS.some((g) => {
-    const gLower = g.toLowerCase();
-    return lower === gLower || lower.startsWith(gLower + ' ');
-  });
-};
-
-const detectAllProjectsQuery = (message: string): boolean => {
-  const lower = message.toLowerCase();
-  return (
-    lower.includes('all project') ||
-    lower.includes('sob project') ||
-    lower.includes('joto project') ||
-    lower.includes('total project') ||
-    lower.includes('all works') ||
-    lower.includes('sob kaj') ||
-    lower.includes('show all') ||
-    lower.includes('sob gulo')
-  );
-};
-
-const FOLLOW_UP_PATTERNS = [
-  'ki ki',
-  'kii ki',
-  'kia kia',
-  'oigula',
-  'oigulake',
-  'what are those',
-  'what are they',
-  'tell me more',
-  'more details',
-  'details',
-  'show me',
-  'dekhabo',
-  'dekha',
-  'list',
-  'বিস্তারিত',
-  'আরো',
-];
-
-const detectFollowUp = (message: string): boolean => {
-  const lower = message.toLowerCase().trim();
-  return FOLLOW_UP_PATTERNS.some((pattern) => lower.includes(pattern));
-};
-
-const extractTechFromHistory = (history?: IChatHistory[]): string | null => {
-  if (!history || history.length === 0) return null;
-
-  for (let i = history.length - 1; i >= 0; i--) {
-    const msg = history[i].content.toLowerCase();
-    for (const tech of TECH_KEYWORDS) {
-      if (msg.includes(tech)) {
-        return tech;
-      }
-    }
-  }
-  return null;
-};
-
-const isSkillFromHistory = (history?: IChatHistory[]): boolean => {
-  if (!history || history.length === 0) return false;
-  for (let i = history.length - 1; i >= 0; i--) {
-    const msg = history[i].content.toLowerCase();
-    if (
-      msg.includes('skill') ||
-      msg.includes('technology') ||
-      msg.includes('tech stack')
-    ) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const isBlogFromHistory = (history?: IChatHistory[]): boolean => {
-  if (!history || history.length === 0) return false;
-  for (let i = history.length - 1; i >= 0; i--) {
-    const msg = history[i].content.toLowerCase();
-    if (
-      msg.includes('blog') ||
-      msg.includes('article') ||
-      msg.includes('writing')
-    ) {
-      return true;
-    }
-  }
-  return false;
-};
+// ==================== Portfolio Overview Context ====================
 
 const buildPortfolioOverviewContext = async (): Promise<string> => {
-  const [skills, projects, blogs] = await Promise.all([
+  const [skills, projects] = await Promise.all([
     getAllSkills(),
     getAllProjectsForCards(),
-    getAllBlogs(),
   ]);
 
   const skillCount = skills.length;
   const projectCount = projects.length;
-  const blogCount = blogs.length;
 
-  const skillNames = skills
-    .map((s) => {
-      const technologies = s.logo.filter((item) => !item.startsWith('http'));
-      return `${s.title}: ${technologies.join(', ')}`;
-    })
-    .join('\n');
+  const aiSkills: string[] = [];
+  const frontendSkills: string[] = [];
+  const backendSkills: string[] = [];
+  const cloudSkills: string[] = [];
 
-  const projectDetails = projects
-    .map((p) => {
-      const detailUrl = PROJECT_DETAILS_URL(p.slug);
-      return `- **[${p.title}](${detailUrl})** — ${p.shortDescription} | Type: ${p.projectType} | Tech: ${p.technologies.join(', ')}`;
-    })
-    .join('\n');
+  const aiKeywords = [
+    'n8n',
+    'gemini',
+    'rag',
+    'langchain',
+    'openai',
+    'zapier',
+    'automation',
+    'agent',
+  ];
+  const frontendKeywords = [
+    'react',
+    'next',
+    'typescript',
+    'javascript',
+    'tailwind',
+    'bootstrap',
+    'css',
+    'html',
+    'material',
+    'shadcn',
+    'redux',
+    'zustand',
+    'ant design',
+    'shopify',
+  ];
+  const backendKeywords = [
+    'node',
+    'express',
+    'mongodb',
+    'mongoose',
+    'postgresql',
+    'prisma',
+    'redis',
+  ];
+  const cloudKeywords = [
+    'firebase',
+    'vercel',
+    'docker',
+    'aws',
+    'netlify',
+    'cloud',
+  ];
 
-  const blogDetails = blogs
-    .map((b) => {
-      const blogUrl = `${SITE_URL}/blogs/${b.slug}`;
-      return `- **[${b.title}](${blogUrl})** — ${b.category}`;
-    })
-    .join('\n');
+  const matchesAny = (text: string, keywords: string[]) =>
+    keywords.some((k) => text.includes(k));
 
-  // Experience, Education, AboutMe will be fetched from DB when available
-  // For now, placeholders are included so the AI can say "Not yet added"
-  return `PORTFOLIO OVERVIEW DATA:
+  skills.forEach((s) => {
+    const techs = s.logo.filter((item) => !item.startsWith('http'));
+    const entry = `**${s.title}**: ${techs.join(', ')}`;
+    const combined = `${s.title} ${techs.join(' ')}`.toLowerCase();
 
-SKILLS (${skillCount} categories):
-${skillNames || 'No skills added yet'}
+    if (matchesAny(combined, aiKeywords)) aiSkills.push(entry);
+    else if (matchesAny(combined, frontendKeywords)) frontendSkills.push(entry);
+    else if (matchesAny(combined, backendKeywords)) backendSkills.push(entry);
+    else if (matchesAny(combined, cloudKeywords)) cloudSkills.push(entry);
+    else frontendSkills.push(entry);
+  });
 
-PROJECTS (${projectCount} total):
-${projectDetails || 'No projects added yet'}
+  const categorizedSkills = [
+    aiSkills.length > 0
+      ? `**AI & Automation:**\n${aiSkills.map((s) => `- ${s}`).join('\n')}`
+      : '',
+    frontendSkills.length > 0
+      ? `**Frontend:**\n${frontendSkills.map((s) => `- ${s}`).join('\n')}`
+      : '',
+    backendSkills.length > 0
+      ? `**Backend:**\n${backendSkills.map((s) => `- ${s}`).join('\n')}`
+      : '',
+    cloudSkills.length > 0
+      ? `**Cloud & Tools:**\n${cloudSkills.map((s) => `- ${s}`).join('\n')}`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
 
-EXPERIENCE: Not yet added (will be fetched from database)
+  const experienceDetails = EXPERIENCE_DATA.map(
+    (exp) =>
+      `- **${exp.title}** at ${exp.company} (${exp.duration})\n  _${exp.description}_`,
+  ).join('\n\n');
 
-EDUCATION: Not yet added (will be fetched from database)
+  const educationDetails = EDUCATION_DATA.map(
+    (edu) =>
+      `- **${edu.degree}**\n  ${edu.institution} | ${edu.duration}\n  _${edu.description}_`,
+  ).join('\n\n');
 
-ABOUT ME: Not yet added (will be fetched from database)
+  return `PORTFOLIO OVERVIEW DATA
 
-BLOGS (${blogCount} published):
-${blogDetails || 'No blogs published yet'}`;
+**HOOK** (start response with this exact line):
+"Subir Das is an AI Solutions Architect & Full-Stack Developer specializing in building self-thinking AI Agents and high-performance web ecosystems."
+
+**SKILLS** (${skillCount} categories):
+${categorizedSkills}
+
+**PROJECTS** (${projectCount} total):
+Just say: "Subir has engineered ${projectCount}+ production-grade projects. Explore his full-scale applications with [live demos](${ALL_PROJECTS_URL})."
+Do NOT list project titles — the frontend will show project cards automatically.
+
+**EXPERIENCE** (${EXPERIENCE_DATA.length} entries):
+${experienceDetails}
+
+**EDUCATION** (${EDUCATION_DATA.length} entries):
+${educationDetails}
+
+**ABOUT ME:**
+${ABOUT_ME_DATA}
+
+Do NOT mention blogs — blogs are only shown when user specifically asks about blogs.
+
+**CLOSING** (end response with this EXACT line):
+---
+Ready to automate your business or build a scalable product? **Let's connect!**
+
+RESPONSE FORMAT RULES:
+- Use **bold** for headings and key terms
+- Use bullet lists (- item) for skills, experience, education
+- Use horizontal rules (---) to separate sections
+- Keep each section concise and scannable`;
 };
 
 const buildContextFromResults = (results: ISearchResult[]): string => {
@@ -851,18 +598,15 @@ const buildContextFromResults = (results: ISearchResult[]): string => {
       const title = r.metadata.title || 'Unknown';
       const content = r.metadata.content || '';
 
-      if (type === 'project') {
-        return `PROJECT: ${title}\n${content}\n`;
-      } else if (type === 'blog') {
-        return `BLOG: ${title}\n${content}\n`;
-      } else if (type === 'skill') {
-        return `SKILL: ${title}\n${content}\n`;
-      }
-      const typeStr = String(type);
-      return `${typeStr.toUpperCase()}: ${title}\n${content}\n`;
+      if (type === 'project') return `PROJECT: ${title}\n${content}\n`;
+      if (type === 'blog') return `BLOG: ${title}\n${content}\n`;
+      if (type === 'skill') return `SKILL: ${title}\n${content}\n`;
+      return `${String(type).toUpperCase()}: ${title}\n${content}\n`;
     })
     .join('\n---\n');
 };
+
+// ==================== Chat Function ====================
 
 export const chat = async (
   message: string,
@@ -878,6 +622,14 @@ export const chat = async (
   const isSkillCount = detectSkillCountQuery(message);
   const isProjectCount = detectProjectCountQuery(message);
   const isGreeting = detectGreeting(message);
+  const isExperienceQuery = detectExperienceQuery(message);
+  const isEducationQuery = detectEducationQuery(message);
+  const isAboutMeQuery = detectAboutMeQuery(message);
+  const isExperienceDuration = detectExperienceDurationQuery(message);
+  const isJobExperience = detectJobExperienceQuery(message);
+  const isCapabilityQuery = detectCapabilityQuery(message);
+  const isFreelancingQuery = detectFreelancingQuery(message);
+  const isAIAutomationQuery = detectAIAutomationQuery(message);
 
   // Greeting — return immediately, no DB queries, no AI call
   if (
@@ -885,78 +637,137 @@ export const chat = async (
     !detectedTech &&
     !isSkillQuery &&
     !isBlogQuery &&
-    !isPortfolioOverview
+    !isPortfolioOverview &&
+    !isExperienceQuery &&
+    !isEducationQuery &&
+    !isAboutMeQuery &&
+    !isJobExperience &&
+    !isExperienceDuration &&
+    !isCapabilityQuery &&
+    !isFreelancingQuery &&
+    !isAIAutomationQuery
   ) {
     const lower = message.toLowerCase().trim();
-
     let greeting =
-      "Hello! I am Subir Das's AI Assistant. How can I help you today?";
+      "Hello! Welcome — I'm Subir Das's AI Assistant. Whether you're here to explore his work, discuss a project, or just curious — I'm here to help. What would you like to know?";
 
-    if (lower.includes('কেমন') || lower.includes('kemon')) {
+    if (lower.includes('কেমন') || lower.includes('kemon'))
       greeting =
-        'আমি ভালো আছি, ধন্যবাদ! আমি সুবির দাসের AI Assistant। আপনি কী জানতে চান?';
-    } else if (
+        "I'm doing great, thank you! I'm Subir Das's AI Assistant — here to help you explore his work, skills, and ongoing projects. What would you like to know?";
+    else if (
       lower.includes('কি অবস্থা') ||
       lower.includes('কি খবর') ||
       lower.includes('ki obostha') ||
       lower.includes('ki khobor')
-    ) {
-      greeting = 'সব ভালো! আমি সুবিরের AI Assistant। কিছু জানতে চান?';
-    } else if (lower.includes('সুপ্রভাত') || lower.includes('good morning')) {
+    )
       greeting =
-        "Good morning! I am Subir Das's AI Assistant. How can I help you?";
-    } else if (
-      lower.includes('শুভ অপরাহ্ন') ||
-      lower.includes('good afternoon')
-    ) {
+        "All good here! I'm Subir's AI Assistant — ready to answer any questions about his projects, skills, or experience. How can I help you?";
+    else if (lower.includes('সুপ্রভাত') || lower.includes('good morning'))
       greeting =
-        "Good afternoon! I am Subir Das's AI Assistant. How can I help you?";
-    } else if (
-      lower.includes('শুভ সন্ধ্যা') ||
-      lower.includes('good evening')
-    ) {
+        "Good morning! Welcome to Subir Das's portfolio. I'm his AI Assistant — feel free to ask about his projects, skills, or how he can help with your next big idea!";
+    else if (lower.includes('শুভ অপরাহ্ন') || lower.includes('good afternoon'))
       greeting =
-        "Good evening! I am Subir Das's AI Assistant. How can I help you?";
-    } else if (lower.includes('শুভ রাত্রি') || lower.includes('good night')) {
+        "Good afternoon! I'm Subir Das's AI Assistant. Whether you're exploring his work or looking for a reliable developer — I'm here to help. What's on your mind?";
+    else if (lower.includes('শুভ সন্ধ্যা') || lower.includes('good evening'))
       greeting =
-        "Good night! I am Subir Das's AI Assistant. Feel free to ask me anything anytime!";
-    } else if (
+        "Good evening! Thanks for stopping by. I'm Subir's AI Assistant — ask me anything about his projects, tech stack, or availability!";
+    else if (lower.includes('শুভ রাত্রি') || lower.includes('good night'))
+      greeting =
+        "Good night! Thanks for visiting. Feel free to come back anytime — I'm always here to help you learn about Subir's work!";
+    else if (
       lower.includes('হায়') ||
       lower.includes('হাই') ||
-      lower.includes('নমস্কার') ||
-      lower.includes('নমস্তে') ||
-      lower.includes('nomoshkar')
-    ) {
-      greeting = 'আমি সুবির দাসের AI Assistant। আপনি কী জানতে চান?';
-    } else if (
-      lower.includes('আসসালাম') ||
-      lower.includes('assalam') ||
-      lower.includes('salam')
-    ) {
+      lower.includes('হেলো')
+    )
       greeting =
-        "Wa Alaikum Assalam! I am Subir Das's AI Assistant. How can I help you?";
-    } else if (
+        "Hey! I'm Subir Das's AI Assistant. Whether you want to explore his portfolio, discuss a project idea, or learn about his tech stack — I've got you covered!";
+    else if (
       lower.includes('hey') ||
       lower.includes('yo') ||
       lower.includes('sup') ||
       lower.includes('wassup') ||
       lower.includes('wazzup')
-    ) {
+    )
       greeting =
-        "Hey there! I'm Subir's AI Assistant. What would you like to know?";
-    } else if (lower.includes('howdy')) {
+        "Hey there! Welcome to Subir's portfolio. I'm his AI Assistant — ready to help you explore projects, skills, or anything you need. What's up?";
+    else if (lower.includes('howdy'))
       greeting =
-        "Howdy! I'm Subir Das's AI Assistant. What can I help you with?";
-    } else if (lower.includes('হেলো')) {
-      greeting = 'হেলো! আমি সুবির দাসের AI Assistant। কী জানতে চান?';
-    }
+        "Howdy! I'm Subir Das's AI Assistant. Feel free to ask about his experience, projects, or how he can bring your ideas to life!";
+    else if (lower.includes('thank'))
+      greeting =
+        "You're welcome! If you have any more questions about Subir's work, skills, or availability — I'm always here to help!";
+    else if (
+      lower.includes('bye') ||
+      lower.includes('goodbye') ||
+      lower.includes('good bye')
+    )
+      greeting =
+        "Goodbye! Thanks for visiting Subir's portfolio. Come back anytime — and don't hesitate to reach out if you need a reliable developer for your next project!";
+    else if (lower.includes('welcome'))
+      greeting =
+        "Thank you! I'm Subir Das's AI Assistant — here to help you explore his work and discuss how he can contribute to your projects. What would you like to know?";
+    else if (
+      lower.includes('who made you') ||
+      lower.includes('who built you') ||
+      lower.includes('who created you')
+    )
+      greeting =
+        'I was built by Subir Das himself! He designed this AI assistant to help visitors like you explore his portfolio, skills, and project capabilities. Pretty cool, right?';
 
+    return { success: true, message: greeting, status: 'SUCCESS' };
+  }
+
+  // ==================== Fixed Intent Responses (No Gemini, No DB) ====================
+
+  // Job Experience — show Codealign durations specifically
+  if (isJobExperience && !isPortfolioOverview) {
     return {
       success: true,
-      message: greeting,
+      message: buildJobExperienceResponse(SITE_URL),
       status: 'SUCCESS',
     };
   }
+
+  // General Experience Duration — show 5+ years overview
+  if (isExperienceDuration && !isPortfolioOverview) {
+    return {
+      success: true,
+      message: buildExperienceDurationResponse(SITE_URL),
+      status: 'SUCCESS',
+    };
+  }
+
+  if (
+    isFreelancingQuery &&
+    !isPortfolioOverview &&
+    !isBlogQuery &&
+    !isSkillQuery
+  ) {
+    return {
+      success: true,
+      message: buildFreelancingResponse(SITE_URL),
+      status: 'SUCCESS',
+    };
+  }
+
+  // Capability — skip if AI automation or freelancing already matched
+  if (
+    isCapabilityQuery &&
+    !isPortfolioOverview &&
+    !isBlogQuery &&
+    !isSkillQuery &&
+    !isAIAutomationQuery &&
+    !isFreelancingQuery
+  ) {
+    const what = extractCapabilityWhat(message);
+    return {
+      success: true,
+      message: buildCapabilityResponse(what, SITE_URL),
+      status: 'SUCCESS',
+    };
+  }
+
+  // ==================== Dynamic Queries (need DB) ====================
 
   let projectCards: IProjectCard[] = [];
   let skillCards: ISkillCard[] = [];
@@ -991,7 +802,7 @@ export const chat = async (
     };
   }
 
-  // Follow-up query detection - look at history for previous topic
+  // Follow-up query detection
   if (
     isFollowUp &&
     !detectedTech &&
@@ -1005,47 +816,39 @@ export const chat = async (
 
     if (prevTech) {
       projectCards = await searchProjectsByTechnology(prevTech);
-      const count = projectCards.length;
-
-      if (count > 0) {
+      if (projectCards.length > 0) {
         const techContext = projectCards
-          .map((p) => {
-            const img = p.imageUrls?.[0] || '';
-            const detailUrl = PROJECT_DETAILS_URL(p.slug);
-            return `PROJECT: ${p.title}\nSlug: ${p.slug}\nDetail URL: ${detailUrl}\nType: ${p.projectType}\nTechnologies: ${p.technologies.join(', ')}\nDescription: ${p.shortDescription}\nLive Link: ${p.liveLink}\nImage: ${img}`;
-          })
+          .map(
+            (p) =>
+              `PROJECT: ${p.title}\nSlug: ${p.slug}\nDetail URL: ${PROJECT_DETAILS_URL(p.slug)}\nType: ${p.projectType}\nTechnologies: ${p.technologies.join(', ')}\nDescription: ${p.shortDescription}\nLive Link: ${p.liveLink}\nImage: ${p.imageUrls?.[0] || ''}`,
+          )
           .join('\n---\n');
-
-        context = `FOLLOW-UP CONTEXT: User is asking about the previous topic "${prevTech}" projects. Found ${count} project(s) using "${prevTech}".\nView All Projects URL: ${ALL_PROJECTS_URL}\n\n${techContext}`;
+        context = `FOLLOW-UP CONTEXT: User is asking about "${prevTech}" projects. Found ${projectCards.length} project(s).\nView All: ${ALL_PROJECTS_URL}\n\n${techContext}`;
       }
     } else if (prevIsSkill) {
       skillCards = await getAllSkills();
-      const count = skillCards.length;
       const skillContext = skillCards
-        .map((s) => {
-          const technologies = s.logo.filter(
-            (item) => !item.startsWith('http'),
-          );
-          return `SKILL CATEGORY: ${s.title}\nTechnologies: ${technologies.join(', ')}`;
-        })
+        .map(
+          (s) =>
+            `SKILL: ${s.title}\nTechnologies: ${s.logo.filter((i) => !i.startsWith('http')).join(', ')}`,
+        )
         .join('\n---\n');
-      context = `FOLLOW-UP CONTEXT: User is asking about the previous topic "skills". Subir has ${count} skill categories.\n\n${skillContext}`;
+      context = `FOLLOW-UP: skills. ${skillCards.length} categories.\n\n${skillContext}`;
     } else if (prevIsBlog) {
       blogCards = await getAllBlogs();
-      const count = blogCards.length;
-      if (count > 0) {
+      if (blogCards.length > 0) {
         const blogContext = blogCards
-          .map((b) => {
-            const blogUrl = `${SITE_URL}/blogs/${b.slug}`;
-            return `BLOG: **[${b.title}](${blogUrl})**\nCategory: ${b.category}\nSummary: ${b.summary}`;
-          })
+          .map(
+            (b) =>
+              `BLOG: [${b.title}](${SITE_URL}/blogs/${b.slug})\nCategory: ${b.category}`,
+          )
           .join('\n---\n');
-        context = `FOLLOW-UP CONTEXT: User is asking about the previous topic "blogs". Subir has published ${count} blog(s).\n\n${blogContext}`;
+        context = `FOLLOW-UP: blogs. ${blogCards.length} published.\n\n${blogContext}`;
       }
     }
   }
 
-  // Portfolio overview query (includes greetings and general "about" queries)
+  // Portfolio overview query
   if (
     isPortfolioOverview &&
     !detectedTech &&
@@ -1053,94 +856,80 @@ export const chat = async (
     !isBlogQuery &&
     !context
   ) {
-    const [allSkills, allProjects, allBlogs] = await Promise.all([
-      getAllSkills(),
-      getAllProjectsForCards(),
-      getAllBlogs(),
-    ]);
-
-    skillCards = allSkills;
-    projectCards = allProjects;
-    blogCards = allBlogs;
-
     context = await buildPortfolioOverviewContext();
   }
 
   // All projects query
   if (isAllProjectsQuery && !context) {
     const allProjects = await getAllProjectsForCards();
+    projectCards = allProjects;
     const count = allProjects.length;
-
     if (count > 0) {
-      const allProjectsContext = allProjects
-        .map((p) => {
-          const img = p.imageUrls?.[0] || '';
-          const detailUrl = PROJECT_DETAILS_URL(p.slug);
-          return `PROJECT: ${p.title}\nSlug: ${p.slug}\nDetail URL: ${detailUrl}\nType: ${p.projectType}\nTechnologies: ${p.technologies.join(', ')}\nDescription: ${p.shortDescription}\nLive Link: ${p.liveLink}\nImage: ${img}`;
-        })
+      const projectContext = allProjects
+        .map(
+          (p) =>
+            `PROJECT: ${p.title}\nSlug: ${p.slug}\nDetail URL: ${PROJECT_DETAILS_URL(p.slug)}\nType: ${p.projectType}\nTechnologies: ${p.technologies.join(', ')}\nDescription: ${p.shortDescription}\nLive Link: ${p.liveLink}\nImage: ${p.imageUrls?.[0] || ''}`,
+        )
         .join('\n---\n');
-
-      context = `ALL PROJECTS DATA: Subir has ${count} total projects.\nView All Projects URL: ${ALL_PROJECTS_URL}\n\n${allProjectsContext}`;
-      projectCards = allProjects;
+      context = `ALL PROJECTS: ${count} total.\nView All: ${ALL_PROJECTS_URL}\n\n${projectContext}`;
     }
   }
 
-  // Technology-based project search
-  if (detectedTech && !context) {
+  // Tech-specific project query
+  if (detectedTech && !isSkillQuery && !isBlogQuery && !context) {
     projectCards = await searchProjectsByTechnology(detectedTech);
-    const count = projectCards.length;
-
-    if (count > 0) {
+    if (projectCards.length > 0) {
       const techContext = projectCards
-        .map((p) => {
-          const img = p.imageUrls?.[0] || '';
-          const detailUrl = PROJECT_DETAILS_URL(p.slug);
-          return `PROJECT: ${p.title}\nSlug: ${p.slug}\nDetail URL: ${detailUrl}\nType: ${p.projectType}\nTechnologies: ${p.technologies.join(', ')}\nDescription: ${p.shortDescription}\nLive Link: ${p.liveLink}\nImage: ${img}`;
-        })
+        .map(
+          (p) =>
+            `PROJECT: ${p.title}\nSlug: ${p.slug}\nDetail URL: ${PROJECT_DETAILS_URL(p.slug)}\nType: ${p.projectType}\nTechnologies: ${p.technologies.join(', ')}\nDescription: ${p.shortDescription}\nLive Link: ${p.liveLink}\nImage: ${p.imageUrls?.[0] || ''}`,
+        )
         .join('\n---\n');
-
-      context = `TECHNOLOGY SEARCH: Found ${count} project(s) using "${detectedTech}".\nView All Projects URL: ${ALL_PROJECTS_URL}\n\n${techContext}`;
+      context = `TECH SEARCH: ${projectCards.length} project(s) using "${detectedTech}".\nView All: ${ALL_PROJECTS_URL}\n\n${techContext}`;
     }
   }
 
   // Skill query
   if (isSkillQuery && !isPortfolioOverview && !context) {
     const allSkills = await getAllSkills();
-    const count = allSkills.length;
-
     const skillContext = allSkills
-      .map((s) => {
-        const technologies = s.logo.filter((item) => !item.startsWith('http'));
-        return `SKILL CATEGORY: ${s.title}\nTechnologies: ${technologies.join(', ')}`;
-      })
+      .map(
+        (s) =>
+          `SKILL: ${s.title}\nTechnologies: ${s.logo.filter((i) => !i.startsWith('http')).join(', ')}`,
+      )
       .join('\n---\n');
-
-    context = `SKILL DATA: Subir has ${count} skill categories.\n\n${skillContext}`;
-
-    if (!isSkillCount) {
-      skillCards = allSkills;
-    }
+    context = `SKILLS: ${allSkills.length} categories.\n\n${skillContext}`;
+    if (!isSkillCount) skillCards = allSkills;
   }
 
   // Blog query
   if (isBlogQuery && !context) {
     const allBlogs = await getAllBlogs();
-    const count = allBlogs.length;
-
-    if (count > 0) {
+    if (allBlogs.length > 0) {
       const blogContext = allBlogs
-        .map((b) => {
-          const blogUrl = `${SITE_URL}/blogs/${b.slug}`;
-          return `BLOG: **[${b.title}](${blogUrl})**\nCategory: ${b.category}\nSummary: ${b.summary}`;
-        })
+        .map(
+          (b) =>
+            `BLOG: [${b.title}](${SITE_URL}/blogs/${b.slug})\nCategory: ${b.category}\nSummary: ${b.summary}`,
+        )
         .join('\n---\n');
-
-      context = `BLOG DATA: Subir has published ${count} blog(s).\n\n${blogContext}`;
-
-      if (!isBlogCount) {
-        blogCards = allBlogs;
-      }
+      context = `BLOGS: ${allBlogs.length} published.\n\n${blogContext}`;
+      if (!isBlogCount) blogCards = allBlogs;
     }
+  }
+
+  // Experience query
+  if (isExperienceQuery && !isPortfolioOverview && !context) {
+    context = `EXPERIENCE (${EXPERIENCE_DATA.length} entries):\n\n${buildExperienceContext()}`;
+  }
+
+  // Education query
+  if (isEducationQuery && !isPortfolioOverview && !context) {
+    context = `EDUCATION:\n\n${buildEducationContext()}`;
+  }
+
+  // About me query
+  if (isAboutMeQuery && !isPortfolioOverview && !context) {
+    context = `ABOUT SUBIR:\n${buildAboutMeContext()}`;
   }
 
   // If no specific query detected, do Pinecone semantic search
@@ -1148,27 +937,75 @@ export const chat = async (
     const results = await searchPinecone(message, DEFAULT_TOP_K);
 
     if (results.length === 0 || results[0].score < SIMILARITY_THRESHOLD) {
-      return {
-        success: true,
-        message: FALLBACK_MESSAGE,
-        score: results[0]?.score || 0,
-        status: 'FAILED',
-      };
-    } else {
-      // Build context from Pinecone results
-      const pineconeContext = buildContextFromResults(results);
+      const lower = message.toLowerCase();
 
-      // Also fetch project details for any project in results
+      // AI/Automation query — build context from about_me + skills, send to Gemini
+      if (
+        isAIAutomationQuery ||
+        lower.includes('automation') ||
+        lower.includes('agent') ||
+        lower.includes('bot')
+      ) {
+        const skills = await getAllSkills();
+        skillCards = skills;
+        const aiSkills = skills
+          .filter((s) => {
+            const t = s.title.toLowerCase();
+            return [
+              'n8n',
+              'gemini',
+              'rag',
+              'langchain',
+              'openai',
+              'zapier',
+              'automation',
+              'agent',
+            ].some((k) => t.includes(k));
+          })
+          .map(
+            (s) =>
+              `${s.title}: ${s.logo.filter((i) => !i.startsWith('http')).join(', ')}`,
+          )
+          .join('\n');
+
+        context = `USER IS ASKING ABOUT AI/AUTOMATION CAPABILITIES:\n\nABOUT SUBIR:\n${buildAboutMeContext()}\n\nRELEVANT AI SKILLS:\n${aiSkills || 'No specific AI skills listed'}\n\nRESPONSE RULE: Answer directly whether Subir can help with their specific need. Be confident and professional. Mention relevant skills and experience.`;
+      }
+
+      // Freelancing query — fixed response
+      if (
+        !context &&
+        (lower.includes('freelanc') ||
+          lower.includes('hire') ||
+          lower.includes('available'))
+      ) {
+        return {
+          success: true,
+          message: buildFreelancingResponse(SITE_URL),
+          score: results[0]?.score || 0,
+          status: 'FAILED',
+        };
+      }
+
+      // No match — smart fallback with about me snippet + contact
+      if (!context) {
+        return {
+          success: true,
+          message: buildNegativeFallbackResponse(SITE_URL),
+          score: results[0]?.score || 0,
+          status: 'FAILED',
+        };
+      }
+    } else {
+      const pineconeContext = buildContextFromResults(results);
       const projectResults = results.filter(
         (r) => r.metadata.type === 'project',
       );
+
       if (projectResults.length > 0) {
         const titles = projectResults
           .map((r) => r.metadata.title)
           .filter(Boolean);
-        const mongoProjects = await Project.find({
-          title: { $in: titles },
-        })
+        const mongoProjects = await Project.find({ title: { $in: titles } })
           .select(
             'title slug shortDescription liveLink imageUrls projectType technologies',
           )
@@ -1186,14 +1023,13 @@ export const chat = async (
         }));
 
         const projectDetails = projectCards
-          .map((p) => {
-            const img = p.imageUrls?.[0] || '';
-            const detailUrl = PROJECT_DETAILS_URL(p.slug);
-            return `PROJECT DETAIL: ${p.title}\nSlug: ${p.slug}\nDetail URL: ${detailUrl}\nImage: ${img}\nLive Link: ${p.liveLink}`;
-          })
+          .map(
+            (p) =>
+              `PROJECT: ${p.title}\nSlug: ${p.slug}\nURL: ${PROJECT_DETAILS_URL(p.slug)}\nImage: ${p.imageUrls?.[0] || ''}\nLive: ${p.liveLink}`,
+          )
           .join('\n---\n');
 
-        context = `${pineconeContext}\n\nPROJECT DETAILS FOR CARDS:\nView All URL: ${ALL_PROJECTS_URL}\n${projectDetails}`;
+        context = `${pineconeContext}\n\nPROJECT CARDS:\nView All: ${ALL_PROJECTS_URL}\n${projectDetails}`;
       } else {
         context = pineconeContext;
       }
@@ -1204,23 +1040,102 @@ export const chat = async (
 
   if (!response) {
     const parts: string[] = [];
-    if (projectCards.length > 0) {
-      const count = projectCards.length;
-      parts.push(`Subir has ${count} project${count > 1 ? 's' : ''}.`);
+    parts.push(
+      '**Subir Das** is an AI Solutions Architect & Full-Stack Developer specializing in building self-thinking AI Agents and high-performance web ecosystems.',
+    );
+
+    let skillsToUse = skillCards;
+    if (skillsToUse.length === 0) {
+      try {
+        skillsToUse = await getAllSkills();
+      } catch {}
     }
-    if (skillCards.length > 0) {
-      const categories = skillCards.map((s) => s.title).join(', ');
-      parts.push(`Skills: ${categories}.`);
+    if (skillsToUse.length > 0) {
+      const aiSk: string[] = [],
+        feSk: string[] = [],
+        beSk: string[] = [],
+        clSk: string[] = [];
+      const aiKw = [
+        'n8n',
+        'gemini',
+        'rag',
+        'langchain',
+        'openai',
+        'zapier',
+        'automation',
+        'agent',
+      ];
+      const feKw = [
+        'react',
+        'next',
+        'typescript',
+        'javascript',
+        'tailwind',
+        'bootstrap',
+        'css',
+        'html',
+        'material',
+        'shadcn',
+        'redux',
+        'zustand',
+        'ant design',
+        'shopify',
+      ];
+      const beKw = [
+        'node',
+        'express',
+        'mongodb',
+        'mongoose',
+        'postgresql',
+        'prisma',
+        'redis',
+      ];
+      const clKw = ['firebase', 'vercel', 'docker', 'aws', 'netlify', 'cloud'];
+      skillsToUse.forEach((s) => {
+        const t = s.title.toLowerCase();
+        if (aiKw.some((k) => t.includes(k))) aiSk.push(s.title);
+        else if (feKw.some((k) => t.includes(k))) feSk.push(s.title);
+        else if (beKw.some((k) => t.includes(k))) beSk.push(s.title);
+        else if (clKw.some((k) => t.includes(k))) clSk.push(s.title);
+        else feSk.push(s.title);
+      });
+      const sections = [
+        aiSk.length > 0 ? `**AI & Automation:**\n${aiSk.join(', ')}` : '',
+        feSk.length > 0 ? `**Frontend:**\n${feSk.join(', ')}` : '',
+        beSk.length > 0 ? `**Backend:**\n${beSk.join(', ')}` : '',
+        clSk.length > 0 ? `**Cloud & Tools:**\n${clSk.join(', ')}` : '',
+      ].filter(Boolean);
+      parts.push(
+        `\n\n---\n\n**Core Tech Stack** (${skillsToUse.length} categories):\n\n${sections.join('\n\n')}`,
+      );
     }
-    if (blogCards.length > 0) {
-      const titles = blogCards.map((b) => b.title).join('; ');
-      parts.push(`Blogs: ${titles}.`);
+
+    if (EXPERIENCE_DATA.length > 0) {
+      parts.push(
+        `\n\n---\n\n**Professional Journey:**\n${EXPERIENCE_DATA.map((e) => `- **${e.title}** at ${e.company} (${e.duration})`).join('\n')}`,
+      );
     }
-    response =
-      parts.length > 0
-        ? parts.join(' ') +
-          ' For more details, contact Subir at subirdas1045@gmail.com'
-        : FALLBACK_MESSAGE;
+    if (EDUCATION_DATA.length > 0) {
+      parts.push(
+        `\n\n**Education:**\n${EDUCATION_DATA.map((e) => `- **${e.degree}** from ${e.institution} (${e.duration})`).join('\n')}`,
+      );
+    }
+
+    let projectsToUse = projectCards;
+    if (projectsToUse.length === 0) {
+      try {
+        projectsToUse = await getAllProjectsForCards();
+      } catch {}
+    }
+    if (projectsToUse.length > 0) {
+      parts.push(
+        `\n\n---\n\nSubir has engineered **${projectsToUse.length}+ production-grade projects**. Explore his full-scale applications with [live demos](${ALL_PROJECTS_URL}).`,
+      );
+    }
+
+    const closing =
+      "\n\n---\nReady to automate your business or build a scalable product? **Let's connect!**";
+    response = parts.join('') + closing + '\n\n' + getContactMessage(SITE_URL);
   }
 
   return {
@@ -1233,11 +1148,17 @@ export const chat = async (
   };
 };
 
+// ==================== Exports ====================
+
 export const AIServices = {
   getEmbedding,
   upsertProjectToAI,
   upsertBlogToAI,
   upsertSkillToAI,
+  upsertExperienceToAI,
+  upsertEducationToAI,
+  upsertAboutMeToAI,
+  upsertAllStaticDataToAI,
   deleteFromAI,
   searchPinecone,
   generateResponse,

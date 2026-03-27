@@ -1,4 +1,3 @@
-
 // import { User } from '../User/user.model';
 
 import QueryBuilder from '../../builder/QueryBuilder';
@@ -9,14 +8,11 @@ import { Blog } from './blog.model';
 import { generateSlug } from './blog.utils';
 
 const createBlog = async (payload: IBlog) => {
-  
   const baseSlug = generateSlug(payload.title);
-
 
   const existingBlog = await Blog.findOne({ slug: baseSlug });
 
   if (existingBlog) {
- 
     payload.slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
   } else {
     payload.slug = baseSlug;
@@ -24,20 +20,21 @@ const createBlog = async (payload: IBlog) => {
 
   const result = await Blog.create(payload);
 
-
   return result;
 };
 
-  const getSingleBlog = async (slug: string) => {
-    const result = await Blog.findOne({ slug });
+const getSingleBlog = async (slug: string) => {
+  const result = await Blog.findOneAndUpdate(
+    { slug },
+    { $inc: { 'meta.views': 1 } },
+    { new: true },
+  );
 
-    if (!result) {
-       throw new AppError(httpStatus.NOT_FOUND, 'Blog not found');
-    }
-    return result
-   
-  };
-  
+  if (!result) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Blog not found');
+  }
+  return result;
+};
 
 const updateOwnBlogByUser = async (
   id: string,
@@ -79,10 +76,17 @@ const deleteOwnBlogByUser = async (
 };
 
 const getAllBlog = async (query: Record<string, unknown>) => {
-  const blogQuery = new QueryBuilder(Blog.find(), query);
+  const blogQuery = new QueryBuilder(Blog.find(), query)
+    .search(['title', 'content'])
+    .filter()
+    .sort('-createdAt')
+    .paginate()
+    .fields();
 
   const result = await blogQuery.modelQuery;
-  return result;
+  const meta = await blogQuery.countTotal();
+
+  return { result, meta };
 };
 
 export const BlogServices = {
@@ -90,5 +94,5 @@ export const BlogServices = {
   updateOwnBlogByUser,
   deleteOwnBlogByUser,
   getAllBlog,
-  getSingleBlog
+  getSingleBlog,
 };
