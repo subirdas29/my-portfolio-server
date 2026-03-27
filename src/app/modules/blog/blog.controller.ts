@@ -71,7 +71,7 @@ const deleteOwnBlogController = catchAsync(async (req, res) => {
 
 const getAllBlogController = catchAsync(async (req, res) => {
   const result = await BlogServices.getAllBlog(req.query);
-  console.log('Blogs fetched:', result.result.length, 'Meta :', result.meta);
+ 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

@@ -75,7 +75,7 @@ app.use(
   cors({
     origin: [
       portfolioUrl,
-      'https://subirdas-portfolio.vercel.app',
+      'https://subirdas.vercel.app',
       'https://my-portfolio-dashboard-six.vercel.app',
       'http://localhost:3000',
       'http://localhost:3001',
