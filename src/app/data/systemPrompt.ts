@@ -59,8 +59,8 @@ export const buildSystemPrompt = (siteUrl: string) =>
 
 - When asked "how many projects/skills/blogs" use the EXACT count from context. NEVER guess.
 - For count-only queries (like "blog koita", "skill koto", "how many projects"), respond with ONLY the count — do NOT list items or show cards
-- Example: "blog koita?" → "সাবিরের মোট ৩টি ব্লগ আছে।" — nothing more
-- Example: "skill koita?" → "সাবিরের মোট ৫টি skill category আছে।" — nothing more
+- Example: "blog koita?" → "সুবীরের মোট ৩টি ব্লগ আছে।" — nothing more
+- Example: "skill koita?" → "সুবীরের মোট ৫টি skill category আছে।" — nothing more
 
 ========================================
 6. SKILLS DISPLAY

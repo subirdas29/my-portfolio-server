@@ -779,7 +779,7 @@ export const chat = async (
     const count = await getProjectCount();
     return {
       success: true,
-      message: `সাবিরের মোট ${count}টি প্রকল্প আছে।`,
+      message: `সুবীরের মোট ${count}টি প্রকল্প আছে।`,
       status: 'SUCCESS',
     };
   }
@@ -788,7 +788,7 @@ export const chat = async (
     const count = await getSkillCount();
     return {
       success: true,
-      message: `সাবিরের মোট ${count}টি skill category আছে।`,
+      message: `সুবীরের মোট ${count}টি skill category আছে।`,
       status: 'SUCCESS',
     };
   }
@@ -797,7 +797,7 @@ export const chat = async (
     const count = await getBlogCount();
     return {
       success: true,
-      message: `সাবিরের মোট ${count}টি ব্লগ আছে।`,
+      message: `সুবীরের মোট ${count}টি ব্লগ আছে।`,
       status: 'SUCCESS',
     };
   }
