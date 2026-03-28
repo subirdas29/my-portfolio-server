@@ -12,7 +12,7 @@ const createProject = async (payload: TProject) => {
   const baseSlug = generateSlug(payload.title);
 
  
-  const existingProject = await Project.findOne({ slug: baseSlug });
+  const existingProject = await Project.findOne({ slug: baseSlug }).lean(); // ✅ lean added
 
   if (existingProject) {
   
@@ -28,7 +28,7 @@ const createProject = async (payload: TProject) => {
   };
 
   const result = await Project.create(projectData);
-  return result;
+  return result.toObject(); 
 };
 
 const getAllProject = async (query: Record<string, unknown>) => {
@@ -38,7 +38,7 @@ const getAllProject = async (query: Record<string, unknown>) => {
     .paginate()  
     .fields();
 
-  const result = await projectQuery.modelQuery;
+  const result = await projectQuery.modelQuery.lean(); 
     const meta = await projectQuery.countTotal();
     
     return {
@@ -48,7 +48,7 @@ const getAllProject = async (query: Record<string, unknown>) => {
   }
 
   const getSingleProject = async (slug: string) => {
-    const result = await Project.findOne({ slug });
+    const result = await Project.findOne({ slug }).lean(); 
 
     if (!result) {
        throw new AppError(httpStatus.NOT_FOUND, 'Project not found');
@@ -99,7 +99,7 @@ const updateProject = async (
   //   if(!(user._id.toString()===author?.author.toString())){
   //     throw new AppError(httpStatus.UNAUTHORIZED,"You can not update this blog, Because you are not author this blog")
   //   }
-  const result = await Project.findByIdAndUpdate(id, payload, { new: true });
+  const result = await Project.findByIdAndUpdate(id, payload, { new: true }).lean(); 
   return result;
 };
 
@@ -118,7 +118,7 @@ const deleteProject = async (
   //     throw new AppError(httpStatus.UNAUTHORIZED,"You can not delete this blog, Because you are not author this blog")
   //   }
 
-  const result = await Project.findByIdAndDelete(id);
+  const result = await Project.findByIdAndDelete(id).lean(); 
   return result;
 };
 

@@ -10,7 +10,7 @@ import { generateSlug } from './blog.utils';
 const createBlog = async (payload: IBlog) => {
   const baseSlug = generateSlug(payload.title);
 
-  const existingBlog = await Blog.findOne({ slug: baseSlug });
+  const existingBlog = await Blog.findOne({ slug: baseSlug }).lean();
 
   if (existingBlog) {
     payload.slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
@@ -20,7 +20,7 @@ const createBlog = async (payload: IBlog) => {
 
   const result = await Blog.create(payload);
 
-  return result;
+  return result.toObject();
 };
 
 const getSingleBlog = async (slug: string) => {
@@ -28,7 +28,7 @@ const getSingleBlog = async (slug: string) => {
     { slug },
     { $inc: { 'meta.views': 1 } },
     { new: true },
-  );
+  ).lean();
 
   if (!result) {
     throw new AppError(httpStatus.NOT_FOUND, 'Blog not found');
@@ -52,7 +52,7 @@ const updateOwnBlogByUser = async (
   //   if(!(user._id.toString()===author?.author.toString())){
   //     throw new AppError(httpStatus.UNAUTHORIZED,"You can not update this blog, Because you are not author this blog")
   //   }
-  const result = await Blog.findByIdAndUpdate(id, payload, { new: true });
+  const result = await Blog.findByIdAndUpdate(id, payload, { new: true }).lean();
   return result;
 };
 
@@ -71,7 +71,7 @@ const deleteOwnBlogByUser = async (
   //     throw new AppError(httpStatus.UNAUTHORIZED,"You can not delete this blog, Because you are not author this blog")
   //   }
 
-  const result = await Blog.findByIdAndDelete(id);
+  const result = await Blog.findByIdAndDelete(id).lean();
   return result;
 };
 
@@ -83,7 +83,7 @@ const getAllBlog = async (query: Record<string, unknown>) => {
     .paginate()
     .fields();
 
-  const result = await blogQuery.modelQuery;
+  const result = await blogQuery.modelQuery.lean();
   const meta = await blogQuery.countTotal();
 
   return { result, meta };

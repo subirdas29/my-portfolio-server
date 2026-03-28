@@ -7,7 +7,7 @@ import { Skill } from "./skill.model";
 const createSkill = async (payload: TSkill) => {
 
   const result = await Skill.create(payload);
-  return result;
+  return result.toObject(); 
 };
 
 
@@ -16,7 +16,7 @@ const getAllSkill = async (query: Record<string, unknown>) => {
 
   const projectQuery = new QueryBuilder(Skill.find().sort('order'), query); 
 
-  const result = await projectQuery.modelQuery;
+  const result = await projectQuery.modelQuery.lean(); 
   const meta = await projectQuery.countTotal();
     
   return { result, meta }
@@ -62,7 +62,7 @@ const updateSkillOrder = async (payload: { id: string; order: number }[]) => {
     //     throw new AppError(httpStatus.UNAUTHORIZED,"You can not delete this blog, Because you are not author this blog")
     //   }
   
-    const result = await Skill.findByIdAndDelete(id);
+    const result = await Skill.findByIdAndDelete(id).lean(); 
     return result;
   };
   
@@ -73,4 +73,3 @@ export const SkillServices = {
     updateSkillOrder,
     getdeleteSkill
   };
-  

@@ -18,13 +18,18 @@ const chat = catchAsync(async (req, res) => {
 
   const result = await AIServices.chat(message, chatHistory);
 
-  // Log every interaction for improvement tracking
-  await ChatLog.create({
-    query: message,
-    response: result.message,
-    score: result.score || 0,
-    status: (result.status as 'SUCCESS' | 'FAILED') || 'FAILED',
-  });
+  // Log only FAILED or low-score interactions to keep DB lean
+  const shouldLog =
+    result.status === 'FAILED' || (result.score && result.score < 0.5);
+
+  if (shouldLog) {
+    await ChatLog.create({
+      query: message,
+      response: result.message,
+      score: result.score || 0,
+      status: (result.status as 'SUCCESS' | 'FAILED') || 'FAILED',
+    });
+  }
 
   res.status(200).json({
     success: result.success,

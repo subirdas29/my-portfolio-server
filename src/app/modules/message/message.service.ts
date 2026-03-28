@@ -35,8 +35,9 @@ const createMessage = async (payload: TMessage) => {
     console.error('Email sending failed:', err);
   }
 
-  return result;
+  return result.toObject(); 
 };
+
 const deleteOwnMessageByUser = async (
   id: string,
   // token:JwtPayload
@@ -52,7 +53,7 @@ const deleteOwnMessageByUser = async (
   //     throw new AppError(httpStatus.UNAUTHORIZED,"You can not delete this blog, Because you are not author this blog")
   //   }
 
-  const result = await Message.findByIdAndDelete(id);
+  const result = await Message.findByIdAndDelete(id).lean(); 
   return result;
 };
 
@@ -64,7 +65,7 @@ const updateMessageStatus = async (id: string, status: string) => {
       new: true, 
       runValidators: true,
     },
-  );
+  ).lean(); 
 
   if (!result) {
     throw new Error('Message not found');
@@ -106,7 +107,7 @@ const getAllMessage = async (query: Record<string, unknown>) => {
     delete query.range;
   }
 
-  // ৩. QueryBuilder কল করা
+
   const messageQuery = new QueryBuilder(Message.find(), query)
     .search(['name', 'email', 'message'])
     .filter()
@@ -114,7 +115,7 @@ const getAllMessage = async (query: Record<string, unknown>) => {
     .paginate()
     .fields();
 
-  const result = await messageQuery.modelQuery;
+  const result = await messageQuery.modelQuery.lean(); 
   const meta = await messageQuery.countTotal();
 
   const totalBooked = await Message.countDocuments({ status: 'Booked' });
@@ -132,7 +133,7 @@ const getAllMessage = async (query: Record<string, unknown>) => {
 
 export const MessageServices = {
   createMessage,
-updateMessageStatus,
+  updateMessageStatus,
   deleteOwnMessageByUser,
   getAllMessage,
 };

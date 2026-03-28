@@ -3,8 +3,11 @@ import mongoose from 'mongoose';
 import app from './app';
 import config from './app/config';
 import seedAdmin from './app/DB';
+import { cleanOldChatLogs } from './app/modules/ai/chatLogCleaner';
 
 let server: Server;
+
+const CHATLOG_CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 
 async function main() {
   try {
@@ -16,6 +19,14 @@ async function main() {
     server = app.listen(config.port, () => {
       console.log(`🚀 Server is running on port ${config.port}`);
     });
+
+    // Run initial cleanup on startup
+    cleanOldChatLogs();
+
+    // Schedule daily cleanup
+    setInterval(() => {
+      cleanOldChatLogs();
+    }, CHATLOG_CLEANUP_INTERVAL);
   } catch (err) {
     console.error('💥 Critical Startup Error:', err);
     process.exit(1);
