@@ -34,3 +34,4 @@ exports.BlogValidation = {
     blogSchema,
     updateBlogSchema,
 };
+//# sourceMappingURL=blog.validation.js.map

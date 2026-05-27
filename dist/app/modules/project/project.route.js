@@ -22,22 +22,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProjectRoutes = void 0;
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const express_1 = __importDefault(require("express"));
+const ProjectModelModule = __importStar(require("./project.model"));
 const project_validation_1 = require("./project.validation");
 const project_controller_1 = require("./project.controller");
 const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
@@ -47,15 +38,13 @@ const blog_model_1 = require("../blog/blog.model");
 const skill_model_1 = require("../skill/skill.model");
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const router = express_1.default.Router();
-// Manual sync endpoint - sync all collections
-router.post('/sync-to-ai', (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // Sync Projects
-    const { Project } = yield Promise.resolve().then(() => __importStar(require('./project.model')));
-    const projects = yield Project.find();
+router.post('/sync-to-ai', (0, catchAsync_1.default)(async (req, res) => {
+    const { Project } = ProjectModelModule;
+    const projects = await Project.find();
     let synced = 0;
     for (const p of projects) {
         try {
-            yield ai_service_1.AIServices.upsertProjectToAI({
+            await ai_service_1.AIServices.upsertProjectToAI({
                 _id: p._id,
                 title: p.title,
                 shortDescription: p.shortDescription,
@@ -72,11 +61,10 @@ router.post('/sync-to-ai', (0, catchAsync_1.default)((req, res) => __awaiter(voi
             console.error(`Failed to sync project ${p._id}:`, e);
         }
     }
-    // Sync Blogs
-    const blogs = yield blog_model_1.Blog.find({ status: 'published' });
+    const blogs = await blog_model_1.Blog.find({ status: 'published' });
     for (const b of blogs) {
         try {
-            yield ai_service_1.AIServices.upsertBlogToAI({
+            await ai_service_1.AIServices.upsertBlogToAI({
                 _id: b._id,
                 title: b.title,
                 content: b.content,
@@ -91,11 +79,10 @@ router.post('/sync-to-ai', (0, catchAsync_1.default)((req, res) => __awaiter(voi
             console.error(`Failed to sync blog ${b._id}:`, e);
         }
     }
-    // Sync Skills
-    const skills = yield skill_model_1.Skill.find();
+    const skills = await skill_model_1.Skill.find();
     for (const s of skills) {
         try {
-            yield ai_service_1.AIServices.upsertSkillToAI({
+            await ai_service_1.AIServices.upsertSkillToAI({
                 _id: s._id,
                 title: s.title,
                 logo: s.logo,
@@ -107,21 +94,13 @@ router.post('/sync-to-ai', (0, catchAsync_1.default)((req, res) => __awaiter(voi
             console.error(`Failed to sync skill ${s._id}:`, e);
         }
     }
-    res.status(200).json({
-        success: true,
-        message: `Synced ${synced} items to Pinecone`,
-    });
-})));
-router.post('/', 
-// auth(USER_ROLES.user),
-(0, validateRequest_1.default)(project_validation_1.ProjectValidation.projectSchema), project_controller_1.ProjectController.createProjectController);
+    res.status(200).json({ success: true, message: `Synced ${synced} items to Pinecone` });
+}));
+router.post('/', (0, validateRequest_1.default)(project_validation_1.ProjectValidation.projectSchema), project_controller_1.ProjectController.createProjectController);
 router.get('/', cache_1.default, project_controller_1.ProjectController.getAllProjectController);
 router.get('/project/:slug', cache_1.default, project_controller_1.ProjectController.getSingleProjectController);
-router.patch('/edit-project/:id', 
-// auth(USER_ROLES.user),
-(0, validateRequest_1.default)(project_validation_1.ProjectValidation.updateProjectSchema), project_controller_1.ProjectController.updateOwnProjectController);
+router.patch('/edit-project/:id', (0, validateRequest_1.default)(project_validation_1.ProjectValidation.updateProjectSchema), project_controller_1.ProjectController.updateOwnProjectController);
 router.patch('/reorder', project_controller_1.ProjectController.updateProjectOrderController);
-router.delete('/:id', 
-// auth(USER_ROLES.user),
-project_controller_1.ProjectController.deleteOwnProjectController);
+router.delete('/:id', project_controller_1.ProjectController.deleteOwnProjectController);
 exports.ProjectRoutes = router;
+//# sourceMappingURL=project.route.js.map

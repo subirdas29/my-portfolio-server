@@ -98,7 +98,7 @@ ProjectSchema.post('findOneAndUpdate', async function () {
 ProjectSchema.post('findOneAndDelete', async function () {
   if (process.env.NODE_ENV !== 'test') {
     try {
-      const doc = (await this.model.findOne(this.getQuery()).lean()) as
+      const doc = (await this.model.findOne(this.getQuery()).lean()) as unknown as
         | (TProject & { _id: unknown })
         | null;
       if (doc && doc._id) {

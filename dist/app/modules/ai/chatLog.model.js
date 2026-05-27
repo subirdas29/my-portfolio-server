@@ -9,3 +9,4 @@ const ChatLogSchema = new mongoose_1.Schema({
     status: { type: String, enum: ['SUCCESS', 'FAILED'], required: true },
 }, { timestamps: true });
 exports.ChatLog = (0, mongoose_1.model)('ChatLog', ChatLogSchema);
+//# sourceMappingURL=chatLog.model.js.map

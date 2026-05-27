@@ -14,3 +14,4 @@ const PageViewSchema = new mongoose_1.Schema({
     event: { type: String, enum: ['pageview', 'session_end'], default: 'pageview' },
 }, { timestamps: true });
 exports.PageView = (0, mongoose_1.model)('PageView', PageViewSchema);
+//# sourceMappingURL=analytics.model.js.map

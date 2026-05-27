@@ -46,3 +46,4 @@ const buildAboutMeContext = () => {
     return exports.ABOUT_ME_DATA;
 };
 exports.buildAboutMeContext = buildAboutMeContext;
+//# sourceMappingURL=portfolioStaticData.js.map

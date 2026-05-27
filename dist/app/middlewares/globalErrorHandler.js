@@ -62,23 +62,12 @@ const globalErrorHandler = (err, req, res, next) => {
             },
         ];
     }
-    //ultimate return
     res.status(statusCode).json({
         success: false,
         message,
         errorSources,
-        // err,
         stack: config_1.default.NODE_ENV === 'development' ? err === null || err === void 0 ? void 0 : err.stack : null,
     });
 };
 exports.default = globalErrorHandler;
-//pattern
-/*
-success
-message
-errorSources:[
-  path:'',
-  message:''
-]
-stack
-*/
+//# sourceMappingURL=globalErrorHandler.js.map

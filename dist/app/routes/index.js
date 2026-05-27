@@ -15,39 +15,18 @@ const notification_route_1 = require("../modules/notification/notification.route
 const goal_route_1 = require("../modules/goal/goal.route");
 const testimonial_route_1 = require("../modules/testimonial/testimonial.route");
 const settings_route_1 = require("../modules/settings/settings.route");
+const stats_route_1 = require("../modules/stats/stats.route");
 const certification_route_1 = require("../modules/certification/certification.route");
 const newsletter_route_1 = require("../modules/newsletter/newsletter.route");
-const stats_route_1 = require("../modules/stats/stats.route");
 const router = (0, express_1.Router)();
 const moduleRoutes = [
-    {
-        path: '/auth',
-        route: auth_route_1.AuthRoutes,
-    },
-    {
-        path: '/blogs',
-        route: blog_route_1.BlogRoutes,
-    },
-    {
-        path: '/projects',
-        route: project_route_1.ProjectRoutes,
-    },
-    {
-        path: '/skills',
-        route: skill_route_1.SkillRoutes,
-    },
-    {
-        path: '/messages',
-        route: message_route_1.MessageRoutes,
-    },
-    {
-        path: '/upload',
-        route: fileUpload_route_1.fileUploadRoutes,
-    },
-    {
-        path: '/ai',
-        route: ai_route_1.AIRoutes,
-    },
+    { path: '/auth', route: auth_route_1.AuthRoutes },
+    { path: '/blogs', route: blog_route_1.BlogRoutes },
+    { path: '/projects', route: project_route_1.ProjectRoutes },
+    { path: '/skills', route: skill_route_1.SkillRoutes },
+    { path: '/messages', route: message_route_1.MessageRoutes },
+    { path: '/upload', route: fileUpload_route_1.fileUploadRoutes },
+    { path: '/ai', route: ai_route_1.AIRoutes },
     { path: '/analytics', route: analytics_route_1.AnalyticsRoutes },
     { path: '/clients', route: client_route_1.ClientRoutes },
     { path: '/orders', route: order_route_1.OrderRoutes },
@@ -55,9 +34,10 @@ const moduleRoutes = [
     { path: '/goals', route: goal_route_1.GoalRoutes },
     { path: '/testimonials', route: testimonial_route_1.TestimonialRoutes },
     { path: '/settings', route: settings_route_1.SettingsRoutes },
+    { path: '/stats', route: stats_route_1.StatsRoutes },
     { path: '/certifications', route: certification_route_1.CertificationRoutes },
     { path: '/newsletter', route: newsletter_route_1.NewsletterRoutes },
-    { path: '/stats', route: stats_route_1.StatsRoutes },
 ];
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
 exports.default = router;
+//# sourceMappingURL=index.js.map

@@ -8,7 +8,7 @@ const projectSchema = z.object({
     slug: z.string().optional(), 
     
  
-    projectType: z.enum(projectType as [string, ...string[]]).default("Full-Stack"),
+    projectType: z.enum([...projectType] as [string, ...string[]]).default("Full-Stack"),
     
     details: z.string().min(10, "Details must be at least 10 characters long"),
     
@@ -37,7 +37,7 @@ const updateProjectSchema = z.object({
   body: z.object({
     title: z.string().min(3).optional(),
     slug: z.string().optional(),
-    projectType: z.enum(projectType as [string, ...string[]]).optional(),
+    projectType: z.enum([...projectType] as [string, ...string[]]).optional(),
     details: z.string().min(10).optional(),
     keyFeatures: z.string().min(2).optional(),
     order: z.number().optional(),

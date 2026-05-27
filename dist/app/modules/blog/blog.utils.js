@@ -12,7 +12,7 @@ const generateSlug = (text, { maxLength = 50 } = {}) => {
         lower: true,
         strict: true,
         locale: 'en',
-        remove: /[*+~.()'"!:@]/g
+        remove: /[*+~.()'"!:@]/g,
     });
     if (slug.length > maxLength) {
         slug = slug.slice(0, maxLength).replace(/-+$/, '');
@@ -20,3 +20,4 @@ const generateSlug = (text, { maxLength = 50 } = {}) => {
     return slug || Date.now().toString();
 };
 exports.generateSlug = generateSlug;
+//# sourceMappingURL=blog.utils.js.map

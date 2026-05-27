@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractCapabilityWhat = exports.buildNegativeFallbackResponse = exports.buildCapabilityResponse = exports.buildFreelancingResponse = exports.buildExperienceDurationResponse = exports.buildJobExperienceResponse = void 0;
 const aiChatDetection_1 = require("../utils/aiChatDetection");
 const ALL_PROJECTS_URL_BASE = process.env.PORTFOLIO_URL || 'http://localhost:3000';
-// ==================== Fixed Response Templates ====================
 const buildJobExperienceResponse = (siteUrl) => `Subir's current professional experience:
 
 - **Junior Software Engineer** at Codealign
@@ -58,7 +57,6 @@ For detailed queries, **let's connect directly:**
 
 ${(0, aiChatDetection_1.getContactMessage)(siteUrl)}`;
 exports.buildNegativeFallbackResponse = buildNegativeFallbackResponse;
-// ==================== Capability "what" extractor ====================
 const extractCapabilityWhat = (message) => {
     const lower = message.toLowerCase();
     if (lower.includes('business') || lower.includes('ব্যবসা'))
@@ -67,9 +65,7 @@ const extractCapabilityWhat = (message) => {
         return 'automation pipelines';
     if (lower.includes('agent') || lower.includes('bot'))
         return 'AI agents and bots';
-    if (lower.includes('web') ||
-        lower.includes('website') ||
-        lower.includes('app'))
+    if (lower.includes('web') || lower.includes('website') || lower.includes('app'))
         return 'web applications';
     if (lower.includes('messenger') || lower.includes('chat'))
         return 'messenger/chat bots';
@@ -82,3 +78,4 @@ const extractCapabilityWhat = (message) => {
     return 'your project';
 };
 exports.extractCapabilityWhat = extractCapabilityWhat;
+//# sourceMappingURL=fixedIntents.js.map
