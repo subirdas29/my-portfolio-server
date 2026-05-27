@@ -126,45 +126,39 @@ export const upsertProjectToAI = async (doc: any) => {
   const text = createProjectContext(doc);
   const embedding = await getEmbedding(text);
   const index = getPinecone().Index(process.env.PINECONE_INDEX as string);
-  await index.namespace(NAMESPACE).upsert({
-    records: [
-      {
-        id: `project_${doc._id?.toString()}`,
-        values: embedding,
-        metadata: createProjectMetadata(doc),
-      },
-    ],
-  });
+  await index.namespace(NAMESPACE).upsert([
+    {
+      id: `project_${doc._id?.toString()}`,
+      values: embedding,
+      metadata: createProjectMetadata(doc),
+    },
+  ]);
 };
 
 export const upsertBlogToAI = async (doc: any) => {
   const text = createBlogContext(doc);
   const embedding = await getEmbedding(text);
   const index = getPinecone().Index(process.env.PINECONE_INDEX as string);
-  await index.namespace(NAMESPACE).upsert({
-    records: [
-      {
-        id: `blog_${doc._id?.toString()}`,
-        values: embedding,
-        metadata: createBlogMetadata(doc),
-      },
-    ],
-  });
+  await index.namespace(NAMESPACE).upsert([
+    {
+      id: `blog_${doc._id?.toString()}`,
+      values: embedding,
+      metadata: createBlogMetadata(doc),
+    },
+  ]);
 };
 
 export const upsertSkillToAI = async (doc: any) => {
   const text = createSkillContext(doc);
   const embedding = await getEmbedding(text);
   const index = getPinecone().Index(process.env.PINECONE_INDEX as string);
-  await index.namespace(NAMESPACE).upsert({
-    records: [
-      {
-        id: `skill_${doc._id?.toString()}`,
-        values: embedding,
-        metadata: createSkillMetadata(doc),
-      },
-    ],
-  });
+  await index.namespace(NAMESPACE).upsert([
+    {
+      id: `skill_${doc._id?.toString()}`,
+      values: embedding,
+      metadata: createSkillMetadata(doc),
+    },
+  ]);
 };
 
 export const upsertExperienceToAI = async () => {
@@ -180,7 +174,7 @@ export const upsertExperienceToAI = async () => {
       };
     }),
   );
-  await index.namespace(NAMESPACE).upsert({ records });
+  await index.namespace(NAMESPACE).upsert(records);
 };
 
 export const upsertEducationToAI = async () => {
@@ -196,21 +190,19 @@ export const upsertEducationToAI = async () => {
       };
     }),
   );
-  await index.namespace(NAMESPACE).upsert({ records });
+  await index.namespace(NAMESPACE).upsert(records);
 };
 
 export const upsertAboutMeToAI = async () => {
   const embedding = await getEmbedding(ABOUT_ME_DATA);
   const index = getPinecone().Index(process.env.PINECONE_INDEX as string);
-  await index.namespace(NAMESPACE).upsert({
-    records: [
-      {
-        id: 'aboutme_0',
-        values: embedding,
-        metadata: { title: 'About Subir Das', content: ABOUT_ME_DATA, type: 'aboutme' },
-      },
-    ],
-  });
+  await index.namespace(NAMESPACE).upsert([
+    {
+      id: 'aboutme_0',
+      values: embedding,
+      metadata: { title: 'About Subir Das', content: ABOUT_ME_DATA, type: 'aboutme' },
+    },
+  ]);
 };
 
 export const upsertAllStaticDataToAI = async () => {

@@ -3,6 +3,7 @@ import { TClient } from './client.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { Types } from 'mongoose';
 import { Message } from '../message/message.model';
+import { Order } from '../order/order.model';
 
 const createClient = async (payload: TClient) => {
   const result = await Client.create(payload);
@@ -29,7 +30,13 @@ const getClientById = async (id: string) => Client.findById(id).lean();
 const updateClient = async (id: string, payload: Partial<TClient>) =>
   Client.findByIdAndUpdate(id, payload, { new: true, runValidators: true }).lean();
 
-const deleteClient = async (id: string) => Client.findByIdAndDelete(id).lean();
+const deleteClient = async (id: string) => {
+  const deleted = await Client.findByIdAndDelete(id).lean();
+  if (deleted) {
+    await Order.deleteMany({ clientId: new Types.ObjectId(id) });
+  }
+  return deleted;
+};
 
 const getClientWithStats = async (id: string) => {
   const result = await Client.aggregate([

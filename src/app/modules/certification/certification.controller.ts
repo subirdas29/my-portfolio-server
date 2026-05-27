@@ -24,7 +24,7 @@ const getAllCertificationsController = catchAsync(async (_req, res) => {
 });
 
 const updateCertificationController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const result = await CertificationServices.updateCertification(id, req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -35,7 +35,7 @@ const updateCertificationController = catchAsync(async (req, res) => {
 });
 
 const deleteCertificationController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   await CertificationServices.deleteCertification(id);
   sendResponse(res, {
     statusCode: httpStatus.OK,

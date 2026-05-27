@@ -2,7 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { AnalyticsController } from './analytics.controller';
 
-const router = Router();
+const router: import("express").Router = Router();
 
 const trackLimiter = rateLimit({ windowMs: 60 * 1000, max: 100 });
 

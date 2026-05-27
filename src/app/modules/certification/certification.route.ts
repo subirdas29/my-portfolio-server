@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { CertificationController } from './certification.controller';
 import cache from '../../middlewares/cache';
 
-const router = Router();
+const router: import("express").Router = Router();
 
 router.post('/', CertificationController.createCertificationController);
 router.get('/', cache, CertificationController.getAllCertificationsController);

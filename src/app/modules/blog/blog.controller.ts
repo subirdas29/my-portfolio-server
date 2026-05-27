@@ -16,7 +16,7 @@ const createBlogController = catchAsync(async (req, res) => {
 });
 
 const getSingleBlog = catchAsync(async (req, res) => {
-  const { slug } = req.params;
+  const slug = req.params.slug as string;
   const result = await BlogServices.getSingleBlog(slug);
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -27,7 +27,7 @@ const getSingleBlog = catchAsync(async (req, res) => {
 });
 
 const updateOwnBlogController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const result = await BlogServices.updateOwnBlogByUser(id, req.body);
   const cacheKeys = ['/api/v1/blogs', `/${id}`];
   if (result && (result as any).slug) {
@@ -43,7 +43,7 @@ const updateOwnBlogController = catchAsync(async (req, res) => {
 });
 
 const deleteOwnBlogController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const project = await BlogServices.deleteOwnBlogByUser(id);
   const cacheKeys = ['/api/v1/blogs', `/${id}`];
   if (project && 'slug' in project) {

@@ -15,6 +15,7 @@ const MessageSchema = new mongoose_1.Schema({
     },
     priority: { type: Boolean, default: false },
     spam: { type: Boolean, default: false },
+    isConverted: { type: Boolean, default: false },
 }, { timestamps: true });
 exports.Message = (0, mongoose_1.model)('Message', MessageSchema);
 //# sourceMappingURL=message.model.js.map

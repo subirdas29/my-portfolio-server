@@ -9,13 +9,13 @@ const createMessageController = catchAsync(async (req, res) => {
 });
 
 const deleteOwnMessageController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   await MessageServices.deleteOwnMessageByUser(id);
   res.status(httpStatus.OK).json({ success: true, message: 'Message deleted successfully', statusCode: httpStatus.OK });
 });
 
 const updateMessageStatusController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const { status } = req.body;
   const result = await MessageServices.updateMessageStatus(id, status);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Message status updated successfully', data: result });
@@ -27,13 +27,13 @@ const getAllMessageController = catchAsync(async (req, res) => {
 });
 
 const togglePriorityController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const result = await MessageServices.togglePriority(id);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Priority toggled', data: result });
 });
 
 const toggleSpamController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const result = await MessageServices.toggleSpam(id);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Spam toggled', data: result });
 });
@@ -51,7 +51,7 @@ const bulkDeleteController = catchAsync(async (req, res) => {
 });
 
 const replyToMessageController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const { replyHtml } = req.body;
   const result = await MessageServices.replyToMessage(id, replyHtml);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Reply sent successfully', data: result });

@@ -9,7 +9,7 @@ import router from './app/routes';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import notFound from './app/middlewares/notFound';
 
-const app = express();
+const app: import('express').Application = express();
 
 app.set('trust proxy', 1);
 

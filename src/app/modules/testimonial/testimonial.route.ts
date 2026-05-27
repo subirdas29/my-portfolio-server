@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { TestimonialController } from './testimonial.controller';
 
-const router = Router();
+const router: import("express").Router = Router();
 router.get('/', TestimonialController.getAllTestimonialsController);
 router.post('/', TestimonialController.createTestimonialController);
 router.patch('/:id/featured', TestimonialController.toggleFeaturedController);

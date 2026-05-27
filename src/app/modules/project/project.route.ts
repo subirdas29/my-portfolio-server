@@ -9,7 +9,7 @@ import { Blog } from '../blog/blog.model';
 import { Skill } from '../skill/skill.model';
 import catchAsync from '../../utils/catchAsync';
 
-const router = express.Router();
+const router: import("express").Router = express.Router();
 
 // Manual sync endpoint - sync all collections
 router.post(

@@ -24,7 +24,7 @@ const updateSkillOrderController = (0, catchAsync_1.default)(async (req, res) =>
     (0, sendResponse_1.default)(res, { statusCode: http_status_1.default.OK, success: true, message: 'Skill order updated successfully', data: result });
 });
 const deleteOwnSkillController = (0, catchAsync_1.default)(async (req, res) => {
-    const { id } = req.params;
+    const id = req.params.id;
     await skill_service_1.SkillServices.getdeleteSkill(id);
     CacheUtils_1.CacheUtils.clearCache(['/api/v1/skills']);
     (0, sendResponse_1.default)(res, { statusCode: http_status_1.default.OK, success: true, message: 'Skill deleted successfully', data: null });

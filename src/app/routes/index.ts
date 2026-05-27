@@ -18,7 +18,7 @@ import { StatsRoutes } from '../modules/stats/stats.route';
 import { CertificationRoutes } from '../modules/certification/certification.route';
 import { NewsletterRoutes } from '../modules/newsletter/newsletter.route';
 
-const router = Router();
+const router: import("express").Router = Router();
 
 const moduleRoutes = [
   { path: '/auth', route: AuthRoutes },

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { OrderController } from './order.controller';
 
-const router = Router();
+const router: import("express").Router = Router();
 
 router.get('/revenue/monthly', OrderController.getRevenueByMonthController);
 router.get('/', OrderController.getAllOrdersController);

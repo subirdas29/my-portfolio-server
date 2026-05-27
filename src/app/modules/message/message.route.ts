@@ -2,7 +2,7 @@ import express from 'express';
 import rateLimit, { MemoryStore } from 'express-rate-limit';
 import { MessageController } from './message.controller';
 
-const router = express.Router();
+const router: import("express").Router = express.Router();
 
 const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,

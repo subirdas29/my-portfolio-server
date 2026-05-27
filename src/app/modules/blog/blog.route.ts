@@ -4,7 +4,7 @@ import validateRequest from '../../middlewares/validateRequest';
 import { BlogValidation } from './blog.validation';
 import cache from '../../middlewares/cache';
 
-const router = express.Router();
+const router: import("express").Router = express.Router();
 
 router.get('/analytics', BlogController.getBlogAnalyticsController);
 router.post('/', validateRequest(BlogValidation.blogSchema), BlogController.createBlogController);

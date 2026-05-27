@@ -30,7 +30,7 @@ const getAllProjectController = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const getSingleProjectController = (0, catchAsync_1.default)(async (req, res) => {
-    const { slug } = req.params;
+    const slug = req.params.slug;
     const result = await project_service_1.ProjectServices.getSingleProject(slug);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
@@ -50,7 +50,7 @@ const updateProjectOrderController = (0, catchAsync_1.default)(async (req, res) 
     });
 });
 const updateOwnProjectController = (0, catchAsync_1.default)(async (req, res) => {
-    const { id } = req.params;
+    const id = req.params.id;
     const result = await project_service_1.ProjectServices.updateProject(id, req.body);
     const cacheKeys = ['/api/v1/projects', `/${id}`];
     if (result && result.slug) {
@@ -65,7 +65,7 @@ const updateOwnProjectController = (0, catchAsync_1.default)(async (req, res) =>
     });
 });
 const deleteOwnProjectController = (0, catchAsync_1.default)(async (req, res) => {
-    const { id } = req.params;
+    const id = req.params.id;
     const project = await project_service_1.ProjectServices.deleteProject(id);
     const cacheKeys = ['/api/v1/projects', `/${id}`];
     if (project && 'slug' in project) {

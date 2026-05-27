@@ -5,7 +5,7 @@ import { Blog } from '../blog/blog.model';
 import { Client } from '../client/client.model';
 import { Testimonial } from '../testimonial/testimonial.model';
 
-const router = Router();
+const router: import("express").Router = Router();
 
 router.get(
   '/',

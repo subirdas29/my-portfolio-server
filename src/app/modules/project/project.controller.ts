@@ -27,7 +27,7 @@ const getAllProjectController = catchAsync(async (req, res) => {
 });
 
 const getSingleProjectController = catchAsync(async (req, res) => {
-  const { slug } = req.params;
+  const slug = req.params.slug as string;
   const result = await ProjectServices.getSingleProject(slug);
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -49,7 +49,7 @@ const updateProjectOrderController = catchAsync(async (req, res) => {
 });
 
 const updateOwnProjectController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const result = await ProjectServices.updateProject(id, req.body);
   const cacheKeys = ['/api/v1/projects', `/${id}`];
   if (result && (result as any).slug) {
@@ -65,7 +65,7 @@ const updateOwnProjectController = catchAsync(async (req, res) => {
 });
 
 const deleteOwnProjectController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const project = await ProjectServices.deleteProject(id);
   const cacheKeys = ['/api/v1/projects', `/${id}`];
   if (project && 'slug' in project) {

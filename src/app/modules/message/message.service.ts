@@ -99,7 +99,7 @@ const replyToMessage = async (id: string, replyHtml: string) => {
   return Message.findByIdAndUpdate(id, { $set: { status: 'Replied' } }, { new: true }).lean();
 };
 
-export const MessageServices = {
+export const MessageServices: Record<string, (...args: any[]) => any> = {
   createMessage,
   updateMessageStatus,
   deleteOwnMessageByUser,

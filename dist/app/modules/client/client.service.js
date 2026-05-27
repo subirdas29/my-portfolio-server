@@ -7,8 +7,13 @@ exports.ClientServices = void 0;
 const client_model_1 = require("./client.model");
 const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const mongoose_1 = require("mongoose");
+const message_model_1 = require("../message/message.model");
+const order_model_1 = require("../order/order.model");
 const createClient = async (payload) => {
     const result = await client_model_1.Client.create(payload);
+    if (payload.linkedMessageId) {
+        await message_model_1.Message.findByIdAndUpdate(payload.linkedMessageId, { isConverted: true });
+    }
     return result.toObject();
 };
 const getAllClients = async (query) => {
@@ -24,7 +29,13 @@ const getAllClients = async (query) => {
 };
 const getClientById = async (id) => client_model_1.Client.findById(id).lean();
 const updateClient = async (id, payload) => client_model_1.Client.findByIdAndUpdate(id, payload, { new: true, runValidators: true }).lean();
-const deleteClient = async (id) => client_model_1.Client.findByIdAndDelete(id).lean();
+const deleteClient = async (id) => {
+    const deleted = await client_model_1.Client.findByIdAndDelete(id).lean();
+    if (deleted) {
+        await order_model_1.Order.deleteMany({ clientId: new mongoose_1.Types.ObjectId(id) });
+    }
+    return deleted;
+};
 const getClientWithStats = async (id) => {
     const result = await client_model_1.Client.aggregate([
         { $match: { _id: new mongoose_1.Types.ObjectId(id) } },

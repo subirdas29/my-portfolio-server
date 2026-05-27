@@ -2,7 +2,7 @@ import express from 'express';
 import rateLimit, { MemoryStore } from 'express-rate-limit';
 import { AIController } from './ai.controller';
 
-const router = express.Router();
+const router: import("express").Router = express.Router();
 
 const chatLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

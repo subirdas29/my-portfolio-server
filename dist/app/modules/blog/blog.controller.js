@@ -20,7 +20,7 @@ const createBlogController = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const getSingleBlog = (0, catchAsync_1.default)(async (req, res) => {
-    const { slug } = req.params;
+    const slug = req.params.slug;
     const result = await blog_service_1.BlogServices.getSingleBlog(slug);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
@@ -30,7 +30,7 @@ const getSingleBlog = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const updateOwnBlogController = (0, catchAsync_1.default)(async (req, res) => {
-    const { id } = req.params;
+    const id = req.params.id;
     const result = await blog_service_1.BlogServices.updateOwnBlogByUser(id, req.body);
     const cacheKeys = ['/api/v1/blogs', `/${id}`];
     if (result && result.slug) {
@@ -45,7 +45,7 @@ const updateOwnBlogController = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const deleteOwnBlogController = (0, catchAsync_1.default)(async (req, res) => {
-    const { id } = req.params;
+    const id = req.params.id;
     const project = await blog_service_1.BlogServices.deleteOwnBlogByUser(id);
     const cacheKeys = ['/api/v1/blogs', `/${id}`];
     if (project && 'slug' in project) {

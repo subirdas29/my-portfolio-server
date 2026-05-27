@@ -23,7 +23,7 @@ const clientSchema = new mongoose_1.Schema({
     tags: [{ type: String }],
     linkedMessageId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Message' },
 }, { timestamps: true });
-clientSchema.index({ email: 1 });
+clientSchema.index({ email: 1 }, { unique: true });
 clientSchema.index({ status: 1 });
 exports.Client = (0, mongoose_1.model)('Client', clientSchema);
 //# sourceMappingURL=client.model.js.map

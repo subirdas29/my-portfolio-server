@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import catchAsync from '../../utils/catchAsync';
 import { Newsletter } from './newsletter.model';
 
-const router = Router();
+const router: import("express").Router = Router();
 
 router.post(
   '/subscribe',

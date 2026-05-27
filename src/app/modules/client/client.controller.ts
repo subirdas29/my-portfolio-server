@@ -14,22 +14,22 @@ const getAllClientsController = catchAsync(async (req, res) => {
 });
 
 const getClientByIdController = catchAsync(async (req, res) => {
-  const result = await ClientServices.getClientById(req.params.id);
+  const result = await ClientServices.getClientById(req.params.id as string);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Client fetched successfully', data: result });
 });
 
 const getClientWithStatsController = catchAsync(async (req, res) => {
-  const result = await ClientServices.getClientWithStats(req.params.id);
+  const result = await ClientServices.getClientWithStats(req.params.id as string);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Client stats fetched', data: result });
 });
 
 const updateClientController = catchAsync(async (req, res) => {
-  const result = await ClientServices.updateClient(req.params.id, req.body);
+  const result = await ClientServices.updateClient(req.params.id as string, req.body);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Client updated successfully', data: result });
 });
 
 const deleteClientController = catchAsync(async (req, res) => {
-  await ClientServices.deleteClient(req.params.id);
+  await ClientServices.deleteClient(req.params.id as string);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Client deleted successfully', data: null });
 });
 

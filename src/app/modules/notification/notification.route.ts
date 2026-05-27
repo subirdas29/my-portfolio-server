@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { NotificationController } from './notification.controller';
 
-const router = Router();
+const router: import("express").Router = Router();
 
 router.get('/stream', NotificationController.streamNotifications);
 router.get('/', NotificationController.getAllNotificationsController);

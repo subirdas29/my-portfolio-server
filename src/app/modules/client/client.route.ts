@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ClientController } from './client.controller';
 
-const router = Router();
+const router: import("express").Router = Router();
 
 router.get('/', ClientController.getAllClientsController);
 router.post('/', ClientController.createClientController);

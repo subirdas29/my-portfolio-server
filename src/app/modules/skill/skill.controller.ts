@@ -22,7 +22,7 @@ const updateSkillOrderController = catchAsync(async (req, res) => {
 });
 
 const deleteOwnSkillController = catchAsync(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   await SkillServices.getdeleteSkill(id);
   CacheUtils.clearCache(['/api/v1/skills']);
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Skill deleted successfully', data: null });

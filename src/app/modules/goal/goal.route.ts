@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { GoalController } from './goal.controller';
 
-const router = Router();
+const router: import("express").Router = Router();
 router.get('/', GoalController.getAllGoalsController);
 router.post('/', GoalController.createGoalController);
 router.post('/sync', GoalController.syncGoalsController);

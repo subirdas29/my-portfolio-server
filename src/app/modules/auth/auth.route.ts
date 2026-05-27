@@ -1,7 +1,7 @@
 import express from 'express';
 import { AuthControllers } from './auth.controller';
 
-const router = express.Router();
+const router: import("express").Router = express.Router();
 
 router.post('/login', AuthControllers.loginUser);
 router.post('/refresh-token', AuthControllers.refreshToken);
