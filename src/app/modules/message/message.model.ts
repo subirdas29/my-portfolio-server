@@ -16,6 +16,7 @@ const MessageSchema = new Schema<TMessage>(
     priority: { type: Boolean, default: false },
     spam: { type: Boolean, default: false },
     isConverted: { type: Boolean, default: false },
+    replies: [{ text: { type: String, required: true }, sentAt: { type: Date, default: Date.now } }],
   },
   { timestamps: true },
 );

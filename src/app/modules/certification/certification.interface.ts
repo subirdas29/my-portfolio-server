@@ -5,5 +5,6 @@ export type TCertification = {
   expiryDate?: string;
   credentialUrl?: string;
   badgeImage?: string;
+  certificateFile?: string;
   order?: number;
 };

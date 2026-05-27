@@ -4,7 +4,7 @@ exports.Goal = void 0;
 const mongoose_1 = require("mongoose");
 const goalSchema = new mongoose_1.Schema({
     title: { type: String, required: true },
-    type: { type: String, enum: ['projects', 'blogs', 'clients', 'orders', 'revenue'], required: true },
+    type: { type: String, enum: ['projects', 'blogs', 'blog_posts', 'clients', 'orders', 'revenue', 'custom'], required: true },
     period: { type: String, enum: ['monthly', 'quarterly', 'yearly'], default: 'monthly' },
     target: { type: Number, required: true },
     current: { type: Number, default: 0 },

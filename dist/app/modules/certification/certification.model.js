@@ -9,6 +9,7 @@ const certificationSchema = new mongoose_1.Schema({
     expiryDate: { type: String },
     credentialUrl: { type: String },
     badgeImage: { type: String },
+    certificateFile: { type: String },
     order: { type: Number, default: 0 },
 }, { timestamps: true });
 certificationSchema.index({ order: 1 });

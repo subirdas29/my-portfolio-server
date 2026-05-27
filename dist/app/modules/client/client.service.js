@@ -33,6 +33,15 @@ const deleteClient = async (id) => {
     const deleted = await client_model_1.Client.findByIdAndDelete(id).lean();
     if (deleted) {
         await order_model_1.Order.deleteMany({ clientId: new mongoose_1.Types.ObjectId(id) });
+        if (deleted.linkedMessageId) {
+            await message_model_1.Message.findByIdAndUpdate(deleted.linkedMessageId, { isConverted: false });
+        }
+        else if (deleted.email) {
+            const stillExists = await client_model_1.Client.exists({ email: deleted.email });
+            if (!stillExists) {
+                await message_model_1.Message.updateMany({ email: deleted.email }, { isConverted: false });
+            }
+        }
     }
     return deleted;
 };

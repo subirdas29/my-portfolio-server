@@ -9,6 +9,7 @@ const certificationSchema = new Schema<TCertification>(
     expiryDate: { type: String },
     credentialUrl: { type: String },
     badgeImage: { type: String },
+    certificateFile: { type: String },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },

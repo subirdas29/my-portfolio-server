@@ -7,6 +7,7 @@ exports.MessageServices = void 0;
 const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const sendEmail_1 = __importDefault(require("../../utils/sendEmail"));
 const message_model_1 = require("./message.model");
+const client_model_1 = require("../client/client.model");
 const createMessage = async (payload) => {
     const result = await message_model_1.Message.create(payload);
     const htmlContent = `
@@ -71,6 +72,18 @@ const getAllMessage = async (query) => {
         .sort()
         .paginate()
         .fields();
+    const convertedMessages = await message_model_1.Message.find({ isConverted: true }).select('_id email').lean();
+    if (convertedMessages.length) {
+        const emails = [...new Set(convertedMessages.map((m) => m.email))];
+        const activeClients = await client_model_1.Client.find({ email: { $in: emails } }).select('email linkedMessageId').lean();
+        const activeEmails = new Set(activeClients.map((c) => c.email));
+        const activeLinkedIds = new Set(activeClients.filter((c) => c.linkedMessageId).map((c) => { var _a; return (_a = c.linkedMessageId) === null || _a === void 0 ? void 0 : _a.toString(); }));
+        const staleIds = convertedMessages
+            .filter((m) => !activeEmails.has(m.email) && !activeLinkedIds.has(m._id.toString()))
+            .map((m) => m._id);
+        if (staleIds.length)
+            await message_model_1.Message.updateMany({ _id: { $in: staleIds } }, { isConverted: false });
+    }
     const result = await messageQuery.modelQuery.lean();
     const meta = await messageQuery.countTotal();
     const totalBooked = await message_model_1.Message.countDocuments({ status: 'Booked' });
@@ -99,8 +112,8 @@ const replyToMessage = async (id, replyHtml) => {
     const msg = await message_model_1.Message.findById(id).lean();
     if (!msg)
         throw new Error('Message not found');
-    await (0, sendEmail_1.default)({ to: msg.email, subject: `Re: ${msg.subject}`, html: replyHtml });
-    return message_model_1.Message.findByIdAndUpdate(id, { $set: { status: 'Replied' } }, { new: true }).lean();
+    await (0, sendEmail_1.default)({ to: msg.email, subject: `Re: ${msg.subject}`, html: replyHtml, replyTo: msg.email });
+    return message_model_1.Message.findByIdAndUpdate(id, { $set: { status: 'Replied' }, $push: { replies: { text: replyHtml, sentAt: new Date() } } }, { new: true }).lean();
 };
 exports.MessageServices = {
     createMessage,

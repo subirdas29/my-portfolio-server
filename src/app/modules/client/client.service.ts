@@ -31,9 +31,18 @@ const updateClient = async (id: string, payload: Partial<TClient>) =>
   Client.findByIdAndUpdate(id, payload, { new: true, runValidators: true }).lean();
 
 const deleteClient = async (id: string) => {
-  const deleted = await Client.findByIdAndDelete(id).lean();
+  const deleted = await Client.findByIdAndDelete(id).lean() as any;
   if (deleted) {
     await Order.deleteMany({ clientId: new Types.ObjectId(id) });
+    if (deleted.linkedMessageId) {
+      await Message.findByIdAndUpdate(deleted.linkedMessageId, { isConverted: false });
+    } else if (deleted.email) {
+      // fallback: no linkedMessageId on old records — reset by email if no other active client exists
+      const stillExists = await Client.exists({ email: deleted.email });
+      if (!stillExists) {
+        await Message.updateMany({ email: deleted.email }, { isConverted: false });
+      }
+    }
   }
   return deleted;
 };

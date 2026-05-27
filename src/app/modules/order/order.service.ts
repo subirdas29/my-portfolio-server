@@ -1,8 +1,18 @@
 import { Order } from './order.model';
 import { TOrder } from './order.interface';
+import QueryBuilder from '../../builder/QueryBuilder';
 
 const createOrder = async (payload: TOrder) => { const r = await Order.create(payload); return r.toObject(); };
-const getAllOrders = async (query: Record<string, unknown>) => Order.find(query as object).sort('-createdAt').lean();
+const getAllOrders = async (query: Record<string, unknown>) => {
+  const orderQuery = new QueryBuilder(Order.find(), query)
+    .filter()
+    .sort('-createdAt')
+    .paginate()
+    .fields();
+  const result = await orderQuery.modelQuery.lean();
+  const meta = await orderQuery.countTotal();
+  return { result, meta };
+};
 const getOrderById = async (id: string) => Order.findById(id).lean();
 const updateOrder = async (id: string, payload: Partial<TOrder>) => Order.findByIdAndUpdate(id, payload, { new: true }).lean();
 const updateMilestone = async (orderId: string, milestoneId: string, done: boolean) =>

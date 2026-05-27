@@ -8,4 +8,5 @@ export type TMessage = {
   priority: boolean;
   spam: boolean;
   isConverted: boolean;
+  replies: { text: string; sentAt: Date }[];
 };
