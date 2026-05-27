@@ -7,4 +7,5 @@ export type TMessage = {
   status: 'Pending' | 'Replied' | 'No Response' | 'Dealing' | 'Booked' | 'Closed';
   priority: boolean;
   spam: boolean;
+  isConverted: boolean;
 };

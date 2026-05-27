@@ -26,7 +26,7 @@ const clientSchema = new Schema<TClient>(
   { timestamps: true },
 );
 
-clientSchema.index({ email: 1 });
+clientSchema.index({ email: 1 }, { unique: true });
 clientSchema.index({ status: 1 });
 
 export const Client = model<TClient>('Client', clientSchema);

@@ -2,9 +2,13 @@ import { Client } from './client.model';
 import { TClient } from './client.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { Types } from 'mongoose';
+import { Message } from '../message/message.model';
 
 const createClient = async (payload: TClient) => {
   const result = await Client.create(payload);
+  if (payload.linkedMessageId) {
+    await Message.findByIdAndUpdate(payload.linkedMessageId, { isConverted: true });
+  }
   return result.toObject();
 };
 

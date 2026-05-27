@@ -15,6 +15,7 @@ const MessageSchema = new Schema<TMessage>(
     },
     priority: { type: Boolean, default: false },
     spam: { type: Boolean, default: false },
+    isConverted: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
