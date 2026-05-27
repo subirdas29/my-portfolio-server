@@ -90,6 +90,12 @@ const getAllMessage = (query) => __awaiter(void 0, void 0, void 0, function* () 
         query.createdAt = { $gte: startDate };
         delete query.range;
     }
+    if ((query === null || query === void 0 ? void 0 : query.spam) !== undefined) {
+        query.spam = query.spam === 'true';
+    }
+    if ((query === null || query === void 0 ? void 0 : query.priority) !== undefined) {
+        query.priority = query.priority === 'true';
+    }
     const messageQuery = new QueryBuilder_1.default(message_model_1.Message.find(), query)
         .search(['name', 'email', 'message'])
         .filter()
@@ -106,9 +112,45 @@ const getAllMessage = (query) => __awaiter(void 0, void 0, void 0, function* () 
             totalGhosted }),
     };
 });
+const togglePriority = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const msg = yield message_model_1.Message.findById(id).lean();
+    if (!msg) throw new Error('Message not found');
+    const result = yield message_model_1.Message.findByIdAndUpdate(id, { $set: { priority: !msg.priority } }, { new: true }).lean();
+    return result;
+});
+const toggleSpam = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const msg = yield message_model_1.Message.findById(id).lean();
+    if (!msg) throw new Error('Message not found');
+    const result = yield message_model_1.Message.findByIdAndUpdate(id, { $set: { spam: !msg.spam } }, { new: true }).lean();
+    return result;
+});
+const bulkUpdateStatus = (ids, status) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield message_model_1.Message.updateMany({ _id: { $in: ids } }, { $set: { status } });
+    return result;
+});
+const bulkDelete = (ids) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield message_model_1.Message.deleteMany({ _id: { $in: ids } });
+    return result;
+});
+const replyToMessage = (id, replyHtml) => __awaiter(void 0, void 0, void 0, function* () {
+    const msg = yield message_model_1.Message.findById(id).lean();
+    if (!msg) throw new Error('Message not found');
+    yield (0, sendEmail_1.default)({
+        to: msg.email,
+        subject: `Re: ${msg.subject}`,
+        html: replyHtml,
+    });
+    const result = yield message_model_1.Message.findByIdAndUpdate(id, { $set: { status: 'Replied' } }, { new: true }).lean();
+    return result;
+});
 exports.MessageServices = {
     createMessage,
     updateMessageStatus,
     deleteOwnMessageByUser,
     getAllMessage,
+    togglePriority,
+    toggleSpam,
+    bulkUpdateStatus,
+    bulkDelete,
+    replyToMessage,
 };

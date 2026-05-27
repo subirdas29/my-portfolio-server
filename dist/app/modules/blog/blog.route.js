@@ -13,7 +13,8 @@ const blog_validation_1 = require("./blog.validation");
 const cache_1 = __importDefault(require("../../middlewares/cache"));
 // import { BlogValidation } from './blog.validation';
 const router = express_1.default.Router();
-router.post('/', 
+router.get('/analytics', blog_controller_1.BlogController.getBlogAnalyticsController);
+router.post('/',
 // auth(USER_ROLES.user),
 (0, validateRequest_1.default)(blog_validation_1.BlogValidation.blogSchema), blog_controller_1.BlogController.createBlogController);
 router.patch('/edit-blog/:id', 

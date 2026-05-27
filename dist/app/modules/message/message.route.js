@@ -21,7 +21,12 @@ const contactLimiter = (0, express_rate_limit_1.default)({
     },
 });
 router.post('/', contactLimiter, message_controller_1.MessageController.createMessageController);
-router.patch('/:id/status', message_controller_1.MessageController.updateMessageStatusController);
-router.delete('/:id', message_controller_1.MessageController.deleteOwnMessageController);
 router.get('/', message_controller_1.MessageController.getAllMessageController);
+router.patch('/bulk/status', message_controller_1.MessageController.bulkUpdateStatusController);
+router.delete('/bulk/delete', message_controller_1.MessageController.bulkDeleteController);
+router.patch('/:id/status', message_controller_1.MessageController.updateMessageStatusController);
+router.patch('/:id/priority', message_controller_1.MessageController.togglePriorityController);
+router.patch('/:id/spam', message_controller_1.MessageController.toggleSpamController);
+router.post('/:id/reply', message_controller_1.MessageController.replyToMessageController);
+router.delete('/:id', message_controller_1.MessageController.deleteOwnMessageController);
 exports.MessageRoutes = router;

@@ -78,10 +78,20 @@ const getAllBlogController = (0, catchAsync_1.default)((req, res) => __awaiter(v
         data: result.result,
     });
 }));
+const getBlogAnalyticsController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield blog_service_1.BlogServices.getBlogAnalytics();
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'Blog analytics fetched successfully',
+        data: result,
+    });
+}));
 exports.BlogController = {
     createBlogController,
     updateOwnBlogController,
     deleteOwnBlogController,
     getAllBlogController,
     getSingleBlog,
+    getBlogAnalyticsController,
 };

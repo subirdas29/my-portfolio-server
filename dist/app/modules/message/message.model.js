@@ -27,7 +27,9 @@ const MessageSchema = new mongoose_1.Schema({
         type: String,
         enum: ["Pending", "Replied", "No Response", "Dealing", "Booked", "Closed"],
         default: "Pending"
-    }
+    },
+    priority: { type: Boolean, default: false },
+    spam: { type: Boolean, default: false }
 }, {
     timestamps: true,
 });

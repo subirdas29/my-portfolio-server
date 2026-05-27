@@ -75,10 +75,34 @@ const getAllBlog = (query) => __awaiter(void 0, void 0, void 0, function* () {
     const meta = yield blogQuery.countTotal();
     return { result, meta };
 });
+const getBlogAnalytics = () => __awaiter(void 0, void 0, void 0, function* () {
+    const allBlogs = yield blog_model_1.Blog.find().lean();
+    const published = allBlogs.filter(b => b.status === 'published');
+    const draft = allBlogs.filter(b => b.status !== 'published');
+    const topByViews = [...allBlogs].sort((a, b) => ((b.meta && b.meta.views) || 0) - ((a.meta && a.meta.views) || 0)).slice(0, 5);
+    const topByLikes = [...allBlogs].sort((a, b) => ((b.meta && b.meta.likes) || 0) - ((a.meta && a.meta.likes) || 0)).slice(0, 5);
+    const recentActivity = [...allBlogs].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 5);
+    const totalViews = allBlogs.reduce((sum, b) => sum + ((b.meta && b.meta.views) || 0), 0);
+    const totalLikes = allBlogs.reduce((sum, b) => sum + ((b.meta && b.meta.likes) || 0), 0);
+    return {
+        topByViews,
+        topByLikes,
+        publishedVsDraft: { published: published.length, draft: draft.length },
+        recentActivity,
+        summary: {
+            total: allBlogs.length,
+            published: published.length,
+            draft: draft.length,
+            totalViews,
+            totalLikes,
+        },
+    };
+});
 exports.BlogServices = {
     createBlog,
     updateOwnBlogByUser,
     deleteOwnBlogByUser,
     getAllBlog,
     getSingleBlog,
+    getBlogAnalytics,
 };

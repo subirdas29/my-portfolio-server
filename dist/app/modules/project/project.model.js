@@ -43,6 +43,12 @@ const ProjectSchema = new mongoose_1.Schema({
     clientGithubLink: { type: String, default: '' },
     serverGithubLink: { type: String, default: '' },
     imageUrls: { type: [String], required: true },
+    status: { type: String, enum: ['Planning', 'In Progress', 'Completed', 'Deployed', 'Archived'], default: 'Deployed' },
+    startDate: { type: Date },
+    endDate: { type: Date },
+    isClientProject: { type: Boolean, default: false },
+    clientName: { type: String },
+    clientEmail: { type: String },
 }, { timestamps: true });
 ProjectSchema.post('save', function () {
     return __awaiter(this, void 0, void 0, function* () {
