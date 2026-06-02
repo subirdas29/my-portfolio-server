@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendEmailTo = void 0;
 const resend_1 = require("resend");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -24,5 +25,21 @@ const sendEmail = async ({ to, subject, html, replyTo }) => {
         return [null, error];
     }
 };
+const sendEmailTo = async ({ to, subject, html }) => {
+    try {
+        const data = await resend.emails.send({
+            from: 'Subir Das <onboarding@resend.dev>',
+            to: Array.isArray(to) ? to : [to],
+            subject,
+            html,
+        });
+        return [data, null];
+    }
+    catch (error) {
+        console.error('Resend Error:', error);
+        return [null, error];
+    }
+};
+exports.sendEmailTo = sendEmailTo;
 exports.default = sendEmail;
 //# sourceMappingURL=sendEmail.js.map

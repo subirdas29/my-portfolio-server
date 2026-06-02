@@ -5,7 +5,7 @@ const mongoose_1 = require("mongoose");
 const MessageSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
-    phone: { type: String, required: true },
+    phone: { type: String, required: false, default: '' },
     subject: { type: String, required: true },
     message: { type: String, required: true },
     status: {

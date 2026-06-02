@@ -23,4 +23,19 @@ const sendEmail = async ({ to, subject, html, replyTo }: { to?: string; subject:
   }
 };
 
+export const sendEmailTo = async ({ to, subject, html }: { to: string | string[]; subject: string; html: string }) => {
+  try {
+    const data = await resend.emails.send({
+      from: 'Subir Das <onboarding@resend.dev>',
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html,
+    });
+    return [data, null];
+  } catch (error) {
+    console.error('Resend Error:', error);
+    return [null, error];
+  }
+};
+
 export default sendEmail;

@@ -1,9 +1,22 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderServices = void 0;
 const order_model_1 = require("./order.model");
+const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const createOrder = async (payload) => { const r = await order_model_1.Order.create(payload); return r.toObject(); };
-const getAllOrders = async (query) => order_model_1.Order.find(query).sort('-createdAt').lean();
+const getAllOrders = async (query) => {
+    const orderQuery = new QueryBuilder_1.default(order_model_1.Order.find(), query)
+        .filter()
+        .sort('-createdAt')
+        .paginate()
+        .fields();
+    const result = await orderQuery.modelQuery.lean();
+    const meta = await orderQuery.countTotal();
+    return { result, meta };
+};
 const getOrderById = async (id) => order_model_1.Order.findById(id).lean();
 const updateOrder = async (id, payload) => order_model_1.Order.findByIdAndUpdate(id, payload, { new: true }).lean();
 const updateMilestone = async (orderId, milestoneId, done) => order_model_1.Order.findOneAndUpdate({ _id: orderId, 'milestones._id': milestoneId }, { $set: { 'milestones.$.done': done } }, { new: true }).lean();

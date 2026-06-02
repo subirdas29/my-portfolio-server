@@ -59,7 +59,20 @@ const getBlogAnalytics = async () => {
     return {
         topByViews,
         topByLikes,
-        publishedVsDraft: { published: published.length, draft: draft.length },
+        publishedVsDraft: [
+            {
+                status: 'published',
+                count: published.length,
+                views: published.reduce((s, b) => s + ((b.meta && b.meta.views) || 0), 0),
+                likes: published.reduce((s, b) => s + ((b.meta && b.meta.likes) || 0), 0),
+            },
+            {
+                status: 'draft',
+                count: draft.length,
+                views: draft.reduce((s, b) => s + ((b.meta && b.meta.views) || 0), 0),
+                likes: draft.reduce((s, b) => s + ((b.meta && b.meta.likes) || 0), 0),
+            },
+        ],
         recentActivity,
         summary: {
             total: allBlogs.length,

@@ -9,6 +9,11 @@ const goalSchema = new mongoose_1.Schema({
     target: { type: Number, required: true },
     current: { type: Number, default: 0 },
     unit: { type: String, default: '' },
+    year: { type: Number },
+    month: { type: Number },
+    quarter: { type: Number },
+    notes: { type: String },
+    completed: { type: Boolean, default: false },
     startDate: Date, endDate: Date,
     isActive: { type: Boolean, default: true },
 }, { timestamps: true });

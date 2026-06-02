@@ -18,4 +18,10 @@ const getAllSubscribersController = catchAsync(async (_req, res) => {
   sendResponse(res, { statusCode: httpStatus.OK, success: true, message: 'Subscribers fetched', data: result });
 });
 
-export const NewsletterController = { subscribeController, unsubscribeController, getAllSubscribersController };
+const broadcastController = catchAsync(async (req, res) => {
+  const { subject, body } = req.body;
+  const result = await NewsletterServices.broadcastNewsletter({ subject, body });
+  sendResponse(res, { statusCode: httpStatus.OK, success: true, message: `Newsletter sent to ${result.sent} subscribers`, data: result });
+});
+
+export const NewsletterController = { subscribeController, unsubscribeController, getAllSubscribersController, broadcastController };

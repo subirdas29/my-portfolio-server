@@ -20,5 +20,10 @@ const getAllSubscribersController = (0, catchAsync_1.default)(async (_req, res) 
     const result = await newsletter_service_1.NewsletterServices.getAllSubscribers();
     (0, sendResponse_1.default)(res, { statusCode: http_status_1.default.OK, success: true, message: 'Subscribers fetched', data: result });
 });
-exports.NewsletterController = { subscribeController, unsubscribeController, getAllSubscribersController };
+const broadcastController = (0, catchAsync_1.default)(async (req, res) => {
+    const { subject, body } = req.body;
+    const result = await newsletter_service_1.NewsletterServices.broadcastNewsletter({ subject, body });
+    (0, sendResponse_1.default)(res, { statusCode: http_status_1.default.OK, success: true, message: `Newsletter sent to ${result.sent} subscribers`, data: result });
+});
+exports.NewsletterController = { subscribeController, unsubscribeController, getAllSubscribersController, broadcastController };
 //# sourceMappingURL=newsletter.controller.js.map
